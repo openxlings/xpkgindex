@@ -45,6 +45,24 @@
     </section>
     {% endif %}
 
+    {% if build_info %}
+    <section class="about-section about-build-info">
+        <h2>Build Info</h2>
+        {% if build_info.time %}
+        <p>Site built at <code>{{ build_info.time }}</code></p>
+        {% endif %}
+        {% if build_info.commit %}
+        <p>From commit
+            {% if build_info.commit_url %}
+            <a href="{{ build_info.commit_url }}" target="_blank" rel="noopener"><code>{{ build_info.commit_short }}</code></a>
+            {% else %}
+            <code>{{ build_info.commit_short }}</code>
+            {% endif %}
+        </p>
+        {% endif %}
+    </section>
+    {% endif %}
+
     <section class="about-section about-footer">
         <p>Built with <a href="https://github.com/d2learn/xpkgindex" target="_blank" rel="noopener">xpkgindex</a></p>
     </section>
