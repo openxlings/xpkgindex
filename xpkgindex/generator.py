@@ -3,13 +3,31 @@
 import json
 import os
 import shutil
-from typing import List
+from typing import List, Optional
 
 from jinja2 import Environment, FileSystemLoader
 
 from .config import load_config
 from .lua_parser import parse_packages_dir
 from .models import Package, SiteConfig
+
+
+def _read_build_info() -> Optional[dict]:
+    """Pick up build provenance from the environment if any of the well-known
+    XPKGINDEX_BUILD_* variables are set. Returns None when nothing is set so
+    the about template can omit the section entirely.
+    """
+    time = os.environ.get("XPKGINDEX_BUILD_TIME")
+    commit = os.environ.get("XPKGINDEX_BUILD_COMMIT")
+    commit_url = os.environ.get("XPKGINDEX_BUILD_COMMIT_URL")
+    if not (time or commit):
+        return None
+    return {
+        "time": time or "",
+        "commit": commit or "",
+        "commit_short": (commit or "")[:7],
+        "commit_url": commit_url or "",
+    }
 
 
 def _safe_filename(name: str) -> str:
@@ -173,6 +191,7 @@ def generate(pkgindex_dir: str, output_dir: str, config_path: str = None):
     about_html = about_tmpl.render(
         config=config,
         current_page="about",
+        build_info=_read_build_info(),
     )
     with open(os.path.join(output_dir, "about.html"), "w", encoding="utf-8") as f:
         f.write(about_html)
