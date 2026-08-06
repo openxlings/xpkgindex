@@ -10,7 +10,7 @@ every locale.
 
 from __future__ import annotations
 
-from typing import Dict, List
+from typing import Any, Dict, List
 
 DEFAULT = "en"
 
@@ -36,6 +36,7 @@ _EN: Dict[str, str] = {
     "nav.repository": "Repository",
     "nav.forum": "Community forum",
     "nav.docs": "Documentation",
+    "nav.website": "Official website",
     "nav.skip": "Skip to content",
 
     "stat.packages": "packages",
@@ -170,6 +171,7 @@ _ZH: Dict[str, str] = {
     "nav.repository": "仓库",
     "nav.forum": "社区论坛",
     "nav.docs": "文档",
+    "nav.website": "官网",
     "nav.skip": "跳到正文",
 
     "stat.packages": "个包",
@@ -286,6 +288,7 @@ _ZH_HANT: Dict[str, str] = {
     "nav.repository": "儲存庫",
     "nav.forum": "社群論壇",
     "nav.docs": "文件",
+    "nav.website": "官方網站",
     "nav.skip": "跳至內容",
 
     "stat.packages": "個套件",
@@ -411,6 +414,29 @@ def available(tags: List[str]) -> List[str]:
     """Keep the configured order, drop unknown tags, always leave one."""
     out = [t for t in tags if t in CATALOG]
     return out or [DEFAULT]
+
+
+def localize(value: Any, lang: str, default: str = DEFAULT) -> Any:
+    """Resolve a consumer-supplied value for one locale.
+
+    Text that an index repository or its plugin provides is never machine
+    translated — but it can be written per locale as `{"en": …, "zh": …}`,
+    and this is what unwraps it. A plain string is returned untouched, which
+    is what keeps single-language configs working and unchanged.
+
+    Falls back through: exact tag, primary subtag, the site default, then any
+    value present — an index that translated only some strings still renders
+    something everywhere.
+    """
+    if not isinstance(value, dict):
+        return value
+    for key in (lang, lang.split("-")[0], default, default.split("-")[0]):
+        if value.get(key):
+            return value[key]
+    for candidate in value.values():
+        if candidate:
+            return candidate
+    return ""
 
 
 class Translator:

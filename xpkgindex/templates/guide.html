@@ -1,15 +1,15 @@
 {% extends "base.html" %}
-{% block title %}{{ guide.title }} · {{ config.title }}{% endblock %}
-{% block description %}{{ guide.title }} — contributor guide for {{ config.title }}.{% endblock %}
+{% block title %}{{ docs_titles[guide.slug] }} · {{ config.title | loc }}{% endblock %}
+{% block description %}{{ docs_titles[guide.slug] }} — contributor guide for {{ config.title | loc }}.{% endblock %}
 
 {% block content %}
 <div class="guide">
   <div class="guide-main">
     <nav class="crumbs">
       <a href="{{ root }}docs/{{ site.guides[0].slug }}/">{{ config.guides_nav_label or t('guide.guides') }}</a>
-      <span>/</span> {{ body.heading or guide.title }}
+      <span>/</span> {{ docs_titles[guide.slug] }}
     </nav>
-    <h1 class="page-title">{{ body.heading or guide.title }}</h1>
+    <h1 class="page-title">{{ docs_titles[guide.slug] }}</h1>
     {# The guide body follows the site language when the index ships a
        translation for it, and stays as authored when it does not. #}
     <p class="muted small">{{ t('guide.rendered_from', path=guide.source) }}</p>

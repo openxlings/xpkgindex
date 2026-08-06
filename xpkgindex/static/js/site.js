@@ -6,11 +6,33 @@
   'use strict';
 
   // ---------------------------------------------------------------- theme
+  var root = document.documentElement;
   var toggle = document.querySelector('.theme-toggle');
+
+  // Duration comes from CSS (--theme-fade, set per site), so a consumer
+  // changes the feel of the switch in .xpkgindex.json alone. Parsed here only
+  // to know when to take the transition back off.
+  function fadeMs() {
+    var raw = getComputedStyle(root).getPropertyValue('--theme-fade').trim();
+    var n = parseFloat(raw) || 0;
+    return /ms\s*$/.test(raw) ? n : n * 1000;
+  }
+
+  var fadeTimer = null;
   if (toggle) {
     toggle.addEventListener('click', function () {
-      var next = document.documentElement.dataset.theme === 'dark' ? 'light' : 'dark';
-      document.documentElement.dataset.theme = next;
+      var next = root.dataset.theme === 'dark' ? 'light' : 'dark';
+      var ms = fadeMs();
+      if (ms > 0) {
+        root.classList.add('theme-anim');
+        clearTimeout(fadeTimer);
+        // A second click mid-fade restarts the timer rather than stranding
+        // the class on the page.
+        fadeTimer = setTimeout(function () {
+          root.classList.remove('theme-anim');
+        }, ms + 60);
+      }
+      root.dataset.theme = next;
       try { localStorage.setItem('xpi-theme', next); } catch (e) { /* private mode */ }
     });
   }

@@ -1,6 +1,6 @@
 {% extends "base.html" %}
 {% import "_macros.html" as m with context %}
-{% block title %}{{ t('con.title') }} · {{ config.title }}{% endblock %}
+{% block title %}{{ t('con.title') }} · {{ config.title | loc }}{% endblock %}
 {% block description %}Who maintains the descriptors, who wrote the libraries upstream, and who builds the ecosystem.{% endblock %}
 
 {% block content %}
@@ -42,7 +42,7 @@
 <section class="blk">
   <h3>{{ t('con.upstream') }}</h3>
   <p class="blk-caption">
-    {{ t('con.upstream_caption', project=config.project_name or config.title) }}<br>
+    {{ t('con.upstream_caption', project=config.project_name | loc or config.title | loc) }}<br>
     {{ t('con.upstream_count', packages=stats.packages, upstreams=upstreams | length) }}
   </p>
   <div class="orgs">

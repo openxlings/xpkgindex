@@ -44,7 +44,7 @@ def _write_json(path: str, data: Any) -> None:
 PLATFORM_LABELS = {"linux": "Linux", "windows": "Windows", "macosx": "macOS"}
 
 
-def _env() -> Environment:
+def _env(lang: str = i18n.DEFAULT, default: str = i18n.DEFAULT) -> Environment:
     env = Environment(
         loader=FileSystemLoader(_here("templates")),
         autoescape=select_autoescape(["html", "xml"]),
@@ -52,6 +52,9 @@ def _env() -> Environment:
         lstrip_blocks=True,
     )
     env.filters["platform_label"] = lambda p: PLATFORM_LABELS.get(p, p)
+    # `loc` unwraps any consumer- or plugin-supplied value that was written
+    # per locale. Applied wherever such text reaches a template.
+    env.filters["loc"] = lambda v: i18n.localize(v, lang, default)
     return env
 
 
@@ -68,7 +71,9 @@ class Renderer:
         self.default = langs[0]
         self.prefix = "" if lang == self.default else f"{lang}/"
         self.write_data = write_data
-        self.env = _env()
+        self.env = _env(lang, langs[0])
+        # The JSON documents are written once, in the site's default language.
+        serialize.set_locale(self.default)
         self.t = i18n.Translator(lang)
         self.asset_v = self.asset_version()
 
@@ -206,8 +211,26 @@ class Renderer:
                          guide=guide, body=self._guide_body(guide))
 
     def _guide_title(self, guide: Dict[str, Any]) -> str:
+        """What this doc is called in this locale.
+
+        A configured title that names this locale explicitly wins: it is the
+        short label an index writes *for the navigation*, and it is the only
+        thing that can be right when the doc itself is not translated — a
+        Traditional Chinese reader gets a Traditional label above a Simplified
+        document rather than nothing.
+
+        Otherwise the doc's own H1, which is at least in the language the doc
+        is actually written in. The configured title is the last resort, and
+        deliberately so: a single English string used to caption every
+        translation of a page.
+        """
+        title = guide["title"]
+        if isinstance(title, dict):
+            for key in (self.lang, self.lang.split("-")[0]):
+                if title.get(key):
+                    return title[key]
         body = self._guide_body(guide)
-        return body.get("heading") or guide["title"]
+        return body.get("heading") or i18n.localize(title, self.lang, self.default)
 
     def _guide_body(self, guide: Dict[str, Any]) -> Dict[str, Any]:
         """Use the consumer's translation for this locale when it exists.
@@ -245,7 +268,7 @@ class Renderer:
     # -- data products ----------------------------------------------------
     def data(self) -> None:
         _write_json(os.path.join(self.out, "index.json"),
-                    serialize.index_dict(self.site, self.config))
+                    serialize.index_dict(self.site, self.config, self.default))
         _write_json(os.path.join(self.out, "search-index.json"),
                     serialize.search_index(self.site))
         _write_json(os.path.join(self.out, "packages.json"),
@@ -299,7 +322,11 @@ class Renderer:
         cfg = self.config
         light = {**({"accent": cfg.accent} if cfg.accent else {}), **cfg.tones}
         dark = {**({"accent": cfg.dark_accent} if cfg.dark_accent else {}), **cfg.dark_tones}
-        out = ["/* generated from .xpkgindex.json — theme tokens */"]
+        out = ["/* generated from .xpkgindex.json — theme tokens */",
+               ":root {",
+               f"  --theme-fade: {cfg.theme_fade};",
+               f"  --theme-fade-ease: {cfg.theme_ease};",
+               "}"]
         if light:
             out.append(":root {")
             out += [f"  --tone-{k}: {v};" for k, v in light.items()]

@@ -21,6 +21,10 @@
   --ink-3: #78848f;
   --ink-4: #9aa5b1;
 
+  /* Overridden per site in theme.css. */
+  --theme-fade: 3s;
+  --theme-fade-ease: cubic-bezier(.45, .05, .25, 1);
+
   --tone-accent: #5b46d6;
   --tone-module: #5b46d6;
   --tone-header: #52606d;
@@ -111,9 +115,12 @@ h1, h2, h3, h4 { line-height: 1.25; letter-spacing: -.01em; }
   position: sticky; top: 0; z-index: 10;
 }
 .topbar-inner { display: flex; align-items: center; gap: 18px; height: 52px; }
+/* The site's name, and the only wordmark in the header — it carries a step
+   more weight and size than the nav links beside it so the eye lands on it
+   first rather than on whichever nav item happens to be active. */
 .brand {
-  font-weight: 650; color: var(--ink); font-size: 15px; letter-spacing: -.01em;
-  white-space: nowrap;
+  font-weight: 700; color: var(--ink); font-size: 17px; letter-spacing: -.015em;
+  white-space: nowrap; margin-right: 2px;
 }
 .brand:hover { text-decoration: none; color: var(--tone-accent); }
 /* No `overflow` here: an overflow ancestor clips absolutely positioned
@@ -706,4 +713,33 @@ tr:last-child td { border-bottom: 0; }
   .topbar-inner { height: auto; flex-wrap: wrap; padding-top: 8px; padding-bottom: 8px; }
   .search input { width: 150px; }
   .bar-row { grid-template-columns: 110px 1fr 34px; }
+}
+
+/* Day/night cross-fade.
+   The transition is attached only while the theme is actually changing —
+   `.theme-anim` goes on <html> for the duration and comes straight off. A
+   permanent transition on these properties would put a three-second lag on
+   every hover state on the page, which is the opposite of the intent.
+
+   Colour properties only: no transform, no opacity, nothing that moves. The
+   page is not animating, the light is. */
+:root.theme-anim,
+:root.theme-anim *,
+:root.theme-anim *::before,
+:root.theme-anim *::after {
+  transition:
+    background-color var(--theme-fade) var(--theme-fade-ease),
+    background-image var(--theme-fade) var(--theme-fade-ease),
+    border-color var(--theme-fade) var(--theme-fade-ease),
+    color var(--theme-fade) var(--theme-fade-ease),
+    fill var(--theme-fade) var(--theme-fade-ease),
+    stroke var(--theme-fade) var(--theme-fade-ease),
+    box-shadow var(--theme-fade) var(--theme-fade-ease) !important;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  :root.theme-anim,
+  :root.theme-anim *,
+  :root.theme-anim *::before,
+  :root.theme-anim *::after { transition: none !important; }
 }

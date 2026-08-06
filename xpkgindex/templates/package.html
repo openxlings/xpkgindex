@@ -1,7 +1,7 @@
 {% extends "base.html" %}
 {% import "_macros.html" as m with context %}
 
-{% block title %}{{ pkg.display }} · {{ config.title }}{% endblock %}
+{% block title %}{{ pkg.display }} · {{ config.title | loc }}{% endblock %}
 {% block description %}{{ pkg.description or pkg.display }}{% endblock %}
 
 {% block content %}
@@ -30,7 +30,7 @@
       <div class="tone-{{ alt.tone }}">{{ m.cmd(alt.code, primary=True) }}</div>
       {% endfor %}
       {% if pkg.interface.data.get('note') %}
-      <p class="muted small iface-note">{{ pkg.interface.data.note }}</p>
+      <p class="muted small iface-note">{{ pkg.interface.data.note | loc }}</p>
       {% endif %}
     </div>
     {% endif %}

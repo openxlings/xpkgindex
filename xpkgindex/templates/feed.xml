@@ -1,10 +1,10 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <feed xmlns="http://www.w3.org/2005/Atom">
-  <title>{{ config.title }}</title>
+  <title>{{ config.title | loc }}</title>
   <link href="{{ base }}/"/>
   <link rel="self" href="{{ base }}/feed.xml"/>
   <id>{{ base }}/</id>
-  <subtitle>{{ config.description }}</subtitle>
+  <subtitle>{{ config.description | loc }}</subtitle>
 {% for ev in events %}
   <entry>
     <title>{{ ev.kind }}: {{ ev.display }}</title>

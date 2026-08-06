@@ -6,15 +6,15 @@
 {# ------------------------------------------------------ 1. hero #}
 <section class="hero">
   <div class="hero-main">
-    <h1>{{ config.title }}</h1>
-    {% if config.description %}<p class="lede">{{ config.description }}</p>{% endif %}
+    <h1>{{ config.title | loc }}</h1>
+    {% if config.description %}<p class="lede">{{ config.description | loc }}</p>{% endif %}
 
     <div class="stat-row">
       <span><b>{{ stats.packages }}</b> {{ t('stat.packages') }}</span>
       <span><b>{{ stats.namespaces }}</b> {{ t('stat.namespaces') }}</span>
       <span><b>{{ stats.versions }}</b> {{ t('stat.versions') }}</span>
       {% for extra in site.index_meta.get('hero_stats', []) %}
-      <span><b>{{ extra.value }}</b> {{ extra.label }}</span>
+      <span><b>{{ extra.value }}</b> {{ extra.label | loc }}</span>
       {% endfor %}
     </div>
 
@@ -24,20 +24,20 @@
     {% if config.install %}
     <div class="install">
       {% if config.install.command %}
-      <div class="install-label">{{ config.install.label or t('home.install') }}</div>
+      <div class="install-label">{{ config.install.label | loc or t('home.install') }}</div>
       {{ m.cmd(config.install.command, primary=True) }}
       {% endif %}
 
       {% if config.install.fallback %}
       {% if config.install.command %}
       <details class="install-more">
-        <summary>{{ config.install.summary or t('home.other_install') }}</summary>
+        <summary>{{ config.install.summary | loc or t('home.other_install') }}</summary>
         <div class="install-more-body" data-os-group>
           {{ m.os_commands(config.install.fallback, nested=True) }}
         </div>
       </details>
       {% else %}
-      {% if config.install.label %}<div class="install-label">{{ config.install.label }}</div>{% endif %}
+      {% if config.install.label %}<div class="install-label">{{ config.install.label | loc }}</div>{% endif %}
       <div data-os-group>
         {{ m.os_commands(config.install.fallback, nested=False) }}
       </div>
@@ -56,16 +56,16 @@
   <aside class="hero-aside">
     <a class="cta-card" href="{{ root }}docs/{{ docs_home }}/" data-tilt>
       <span class="cta-glow" aria-hidden="true"></span>
-      {% if cta.get('eyebrow') %}<span class="cta-eyebrow">{{ cta.eyebrow }}</span>{% endif %}
-      <span class="cta-title">{{ cta.get('title') or config.docs_cta_label or t('home.quick_start') }}</span>
-      {% if cta.get('description') %}<span class="cta-desc">{{ cta.description }}</span>{% endif %}
+      {% if cta.get('eyebrow') %}<span class="cta-eyebrow">{{ cta.eyebrow | loc }}</span>{% endif %}
+      <span class="cta-title">{{ cta.get('title') | loc or config.docs_cta_label | loc or t('home.quick_start') }}</span>
+      {% if cta.get('description') %}<span class="cta-desc">{{ cta.description | loc }}</span>{% endif %}
       {% if cta.get('lines') %}
       <span class="cta-lines">
         {% for line in cta.lines %}<code>{{ line }}</code>{% endfor %}
       </span>
       {% endif %}
       <span class="cta-action">
-        {{ cta.get('action') or t('home.quick_start') }}
+        {{ cta.get('action') | loc or t('home.quick_start') }}
         <svg class="cta-arrow" viewBox="0 0 16 16" width="15" height="15" aria-hidden="true">
           <path fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"
                 stroke-linejoin="round" d="M3 8h9M8.5 4.5 12 8l-3.5 3.5"/>
@@ -141,18 +141,18 @@
     </div>
     {% for facet in site.facets %}
     <div class="facet-group">
-      <span class="facet-axis">{{ t(facet.label_key) if facet.label_key else (facet.label or facet.key) }}</span>
+      <span class="facet-axis">{{ t(facet.label_key) if facet.label_key else (facet.label | loc or facet.key) }}</span>
       {% for v in facet.values[:8] %}
       <button class="facet tone-{{ v.tone or 'neutral' }}"
               data-facet="{{ facet.key }}" data-value="{{ v.key }}">
-        {{ v.label or v.key }} <span class="n">{{ v.count }}</span>
+        {{ v.label | loc or v.key }} <span class="n">{{ v.count }}</span>
       </button>
       {% endfor %}
       {% if facet.values | length > 8 %}
         {% for v in facet.values[8:] %}
         <button class="facet facet-extra tone-{{ v.tone or 'neutral' }}" hidden
                 data-facet="{{ facet.key }}" data-value="{{ v.key }}">
-          {{ v.label or v.key }} <span class="n">{{ v.count }}</span>
+          {{ v.label | loc or v.key }} <span class="n">{{ v.count }}</span>
         </button>
         {% endfor %}
         <button class="facet-more" type="button">{{ t('home.more', n=facet.values | length - 8) }}</button>

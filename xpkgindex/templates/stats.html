@@ -1,6 +1,6 @@
 {% extends "base.html" %}
 {% import "_macros.html" as m with context %}
-{% block title %}{{ t('stats.title') }} · {{ config.title }}{% endblock %}
+{% block title %}{{ t('stats.title') }} · {{ config.title | loc }}{% endblock %}
 {% block description %}How this package index has grown over time.{% endblock %}
 
 {% block content %}

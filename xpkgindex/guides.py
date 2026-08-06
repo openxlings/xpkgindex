@@ -10,7 +10,7 @@ from __future__ import annotations
 
 import os
 import re
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List, Optional, Set
 
 from markdown_it import MarkdownIt
 
@@ -29,8 +29,33 @@ def _permalink(anchor: str):
     return tok
 
 
+def _strip_language_line(tokens: List[Any], base_dir: str, siblings: Set[str]) -> List[Any]:
+    """Drop a hand-written "English | 简体中文" line from the top of a doc.
+
+    These documents are written to read on GitHub too, where a manual link
+    between translations is the only way to switch. On the site the header
+    already has a language switcher that follows the whole page, so the line
+    is a second, worse switcher pointing at raw `.md` files.
+
+    The test is exact rather than a guess at what a language line looks like:
+    the doc entry declares its own translations, so a leading paragraph whose
+    links *all* point at another translation of this same document is one.
+    """
+    if len(tokens) < 3 or tokens[0].type != "paragraph_open":
+        return tokens
+    links = [child for child in (tokens[1].children or []) if child.type == "link_open"]
+    if not links:
+        return tokens
+    for link in links:
+        href = (link.attrGet("href") or "").split("#")[0]
+        target = os.path.normpath(os.path.join(base_dir, href)).replace(os.sep, "/")
+        if target not in siblings:
+            return tokens
+    return tokens[3:]
+
+
 def _render(text: str, base_dir: str, guide_slugs: Dict[str, str],
-            depth: int) -> Dict[str, Any]:
+            depth: int, siblings: Optional[Set[str]] = None) -> Dict[str, Any]:
     # Raw HTML is allowed: these documents belong to the index repository and
     # are written to render on GitHub too, where `<details>` disclosures are
     # idiomatic. Escaping them printed the tags as text. The trust level is
@@ -46,6 +71,8 @@ def _render(text: str, base_dir: str, guide_slugs: Dict[str, str],
     if len(tokens) >= 3 and tokens[0].type == "heading_open" and tokens[0].tag == "h1":
         heading = tokens[1].content.strip()
         tokens = tokens[3:]
+
+    tokens = _strip_language_line(tokens, base_dir, siblings or set())
 
     toc: List[Dict[str, Any]] = []
     counts: Dict[str, int] = {}
@@ -104,8 +131,13 @@ def load(root: str, entries: List[Any]) -> (List[Dict[str, Any]], List[str]):
             continue
         with open(full, "r", encoding="utf-8", errors="replace") as f:
             text = f.read()
+        # Every source file of this doc, so its own language line can be
+        # recognised precisely and removed.
+        siblings = {entry.path.replace(os.sep, "/")}
+        siblings |= {r.replace(os.sep, "/") for r in (entry.translations or {}).values()}
+
         base_dir = os.path.dirname(entry.path)
-        rendered = _render(text, base_dir, slug_by_path, depth=2)
+        rendered = _render(text, base_dir, slug_by_path, depth=2, siblings=siblings)
 
         langs: Dict[str, Dict[str, Any]] = {}
         for lang, rel in (entry.translations or {}).items():
@@ -115,7 +147,7 @@ def load(root: str, entries: List[Any]) -> (List[Dict[str, Any]], List[str]):
                 continue
             with open(lpath, "r", encoding="utf-8", errors="replace") as f:
                 langs[lang] = _render(f.read(), os.path.dirname(rel), slug_by_path,
-                                      depth=3)
+                                      depth=3, siblings=siblings)
 
         out.append({
             "slug": entry.slug,

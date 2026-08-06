@@ -43,7 +43,7 @@
 {% if c.multi %}
 <ul class="chart-legend">
   {% for l in c.lines %}
-  <li><i style="background: {{ l.color }}"></i>{{ l.label }} <b>{{ l.value }}</b></li>
+  <li><i style="background: {{ l.color }}"></i>{{ l.label | loc }} <b>{{ l.value }}</b></li>
   {% endfor %}
 </ul>
 {% endif %}
@@ -55,12 +55,12 @@
    so no visitor is ever left without an install line. #}
 <div class="os-switch" hidden data-os-switch>
   {% for c in commands %}
-  <button type="button" class="os-tab" data-os-tab="{{ c.id }}">{{ c.os }}</button>
+  <button type="button" class="os-tab" data-os-tab="{{ c.id }}">{{ c.os | loc }}</button>
   {% endfor %}
 </div>
 {% for c in commands %}
 <div class="os-cmd" data-os="{{ c.id }}">
-  <div class="install-os">{{ c.os }}</div>
+  <div class="install-os">{{ c.os | loc }}</div>
   {{ cmd(c.command, primary=(not nested)) }}
 </div>
 {% endfor %}
@@ -116,14 +116,14 @@
   </div>
   {% if r.code %}
   <div class="row-code{{ ' row-code-muted' if r.code_muted }}"
-       {% if r.code_muted %}title="{{ r.note }}"{% endif %}><code>{{ r.code }}</code></div>
+       {% if r.code_muted %}title="{{ r.note | loc }}"{% endif %}><code>{{ r.code }}</code></div>
   {% endif %}
   <div class="row-foot">
     {% if r.install %}{{ copy_inline(r.install, 'row-install') }}{% endif %}
     <span class="row-meta">
       {% if pkg.licenses %}{{ pkg.licenses | join(', ') }}{% endif %}
       {% if pkg.platforms %}<span class="dot"></span>{{ pkg.platforms | length }} {{ t('pkg.platforms') | lower }}{% endif %}
-      {% for badge in r.badges %}<span class="dot"></span>{{ badge }}{% endfor %}
+      {% for badge in r.badges %}<span class="dot"></span>{{ badge | loc }}{% endfor %}
     </span>
   </div>
 {% endmacro %}
@@ -138,11 +138,11 @@
       {%- if parts[0] %}<span class="ns">{{ parts[0] }}</span>{% endif -%}{{ parts[1] }}
     </a>
     {% if pkg.latest %}<span class="row-cver">{{ pkg.latest }}</span>{% endif %}
-    {% if r.lead %}<span class="row-lead">{{ r.lead }}</span>{% endif %}
+    {% if r.lead %}<span class="row-lead">{{ r.lead | loc }}</span>{% endif %}
     <span class="row-cmeta">
       {% if pkg.licenses %}<span>{{ pkg.licenses | join(', ') }}</span>{% endif %}
       {% if pkg.platforms %}<span>{{ pkg.platforms | length }} {{ t('pkg.platforms') | lower }}</span>{% endif %}
-      {% for badge in r.badges %}<span>{{ badge }}</span>{% endfor %}
+      {% for badge in r.badges %}<span>{{ badge | loc }}</span>{% endfor %}
     </span>
   </div>
   {% if pkg.description %}<p class="row-cdesc">{{ pkg.description }}</p>{% endif %}
@@ -160,11 +160,11 @@
 <section class="blk blk-{{ b.kind }}{{ ' blk-fold' if b.collapsed }}" data-plugin="{{ b.plugin }}">
   {% if b.collapsed %}
   <details>
-    <summary><h3>{{ b.title }}</h3></summary>
+    <summary><h3>{{ b.title | loc }}</h3></summary>
     <div class="blk-body">{{ block_body(b) }}</div>
   </details>
   {% else %}
-  {% if b.title %}<h3>{{ b.title }}</h3>{% endif %}
+  {% if b.title %}<h3>{{ b.title | loc }}</h3>{% endif %}
   <div class="blk-body">{{ block_body(b) }}</div>
   {% endif %}
 </section>
@@ -174,23 +174,23 @@
   {%- if b.kind == 'kv' -%}
     <dl class="kv">
       {% for item in b.data.get('items', []) %}
-      <dt>{{ item.key }}</dt>
-      <dd>{% if item.get('mono') %}<code>{{ item.value }}</code>{% else %}{{ item.value }}{% endif %}</dd>
+      <dt>{{ item.key | loc }}</dt>
+      <dd>{% if item.get('mono') %}<code>{{ item.value }}</code>{% else %}{{ item.value | loc }}{% endif %}</dd>
       {% endfor %}
     </dl>
   {%- elif b.kind == 'code' -%}
-    {% if b.data.get('caption') %}<p class="blk-caption">{{ b.data.caption }}</p>{% endif %}
+    {% if b.data.get('caption') %}<p class="blk-caption">{{ b.data.caption | loc }}</p>{% endif %}
     <div class="code-block">
       <pre><code>{{ b.data.get('code', '') }}</code></pre>
       {{ copy_button(b.data.get('code', '')) }}
     </div>
     {% if b.data.get('source') %}
-    <p class="blk-source">{{ b.data.source }}</p>
+    <p class="blk-source">{{ b.data.source | loc }}</p>
     {% endif %}
   {%- elif b.kind == 'table' -%}
     <div class="table-wrap">
       <table>
-        <thead><tr>{% for h in b.data.get('head', []) %}<th>{{ h }}</th>{% endfor %}</tr></thead>
+        <thead><tr>{% for h in b.data.get('head', []) %}<th>{{ h | loc }}</th>{% endfor %}</tr></thead>
         <tbody>
         {% for row in b.data.get('rows', []) %}
           <tr>{% for cell in row %}<td>{{ cell }}</td>{% endfor %}</tr>
@@ -203,7 +203,7 @@
       {% for item in b.data.get('items', []) %}<li><code>{{ item }}</code></li>{% endfor %}
     </ul>
   {%- elif b.kind == 'callout' -%}
-    <p class="callout">{{ b.data.get('text', '') }}</p>
+    <p class="callout">{{ b.data.get('text', '') | loc }}</p>
   {%- endif -%}
 {% endmacro %}
 

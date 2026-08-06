@@ -68,6 +68,7 @@ class SiteConfig:
     # -- links ------------------------------------------------------------
     github: str = ""
     forum: str = ""
+    website: str = ""          # the project's own site, not this index
     docs_url: str = ""
     custom_links: List[Dict[str, str]] = field(default_factory=list)
 
@@ -84,6 +85,13 @@ class SiteConfig:
     tones: Dict[str, str] = field(default_factory=dict)
     dark_accent: str = ""
     dark_tones: Dict[str, str] = field(default_factory=dict)
+    # How long the day/night swap takes, and on what curve. Long by default:
+    # an instant repaint of a whole page reads as a glitch, a slow cross-fade
+    # reads as a deliberate change of light. An index that wants it snappy
+    # sets `theme.transition.duration` to something short — or "0s" to switch
+    # instantly, which is also what a visitor with reduced-motion always gets.
+    theme_fade: str = "3s"
+    theme_ease: str = "cubic-bezier(.45, .05, .25, 1)"
     density: str = "comfortable"
 
     # -- build ------------------------------------------------------------
@@ -200,6 +208,7 @@ def load_config(directory: str, config_path: Optional[str] = None) -> SiteConfig
     links = data.get("links", {})
     cfg.github = links.get("github", "")
     cfg.forum = links.get("forum", "")
+    cfg.website = links.get("website", "")
     cfg.docs_url = links.get("docs", "")
     cfg.custom_links = links.get("custom", []) or []
 
@@ -217,6 +226,9 @@ def load_config(directory: str, config_path: Optional[str] = None) -> SiteConfig
     dark = theme.get("dark", {}) or {}
     cfg.dark_accent = dark.get("accent", "")
     cfg.dark_tones = dark.get("tones", {}) or {}
+    fade = theme.get("transition", {}) or {}
+    cfg.theme_fade = str(fade.get("duration", cfg.theme_fade))
+    cfg.theme_ease = str(fade.get("easing", cfg.theme_ease))
     cfg.density = theme.get("density", cfg.density)
 
     cfg.pkgs_dir = data.get("pkgs_dir", cfg.pkgs_dir)

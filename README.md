@@ -88,14 +88,18 @@ whole design system from `.xpkgindex.json` — no fork, no CSS edit.
 ```jsonc
 {
   "site":  { "title": "…", "description": "…", "logo": "…" },
-  "links": { "github": "…", "custom": [{ "label": "…", "url": "…" }] },
+  "links": { "github": "…", "website": "…",   // the project's own site (globe icon)
+             "forum": "…", "docs": "…",     // community, external documentation
+             "custom": [{ "label": "…", "url": "…" }] },
   "about": { "project_name": "…", "project_url": "…", "license": "…" },
 
   "theme": {
     "accent": "#5b46d6",
     "style":  "auto",                       // auto | light | dark
     "tones":  { "module": "…", "header": "…", "tool": "…" },
-    "dark":   { "accent": "#9b8bfa", "tones": {} }
+    "dark":   { "accent": "#9b8bfa", "tones": {} },
+    "transition": { "duration": "3s",       // day/night cross-fade; "0s" to switch instantly
+                    "easing": "cubic-bezier(.45, .05, .25, 1)" }
   },
 
   "pkgs_dir": "pkgs",
@@ -137,6 +141,36 @@ sees every platform.
 
 Older configs keep working: `primary_color`, `install_commands`,
 `install.fallback.commands` and `{name}` in the template are all still honoured.
+
+### Text in more than one language
+
+Every string the *index* supplies — not the framework's own chrome, which is
+already translated — can be written per locale instead of once:
+
+```jsonc
+"site":    { "title": { "en": "mcpp Package Index", "zh": "mcpp 包索引" } },
+"install": { "primary": { "label": { "en": "Install mcpp", "zh": "安装 mcpp" } } },
+"docs":    { "cta": { "title": { "en": "Quick start", "zh": "快速开始" } } }
+```
+
+A plain string still means "the same in every language", so nothing has to
+change for a single-language index. Resolution falls back through the exact
+tag (`zh-Hant`), its primary subtag (`zh`), the site's default locale, and
+finally any value present — a half-translated config still renders everywhere.
+
+The same maps work from a plugin, for facet labels, block titles, badges and
+row leads. Identifiers should stay untranslated: `import`, `#include`,
+`modules`, `targets` are what a reader types or what the manifest calls the
+field.
+
+`index.json` flattens these to the default locale — schema 1 promises strings,
+and a consumer parsing a label must not suddenly receive a map.
+
+Guide bodies follow the header's language switcher whenever the entry declares
+a translation for that locale. A hand-written `**English** | [简体中文](…)`
+line at the top of a doc — written so the file also reads on GitHub — is
+recognised by its links and dropped from the rendered page, since the site
+already has one switcher and it covers the whole page.
 
 ---
 

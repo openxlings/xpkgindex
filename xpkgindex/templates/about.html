@@ -1,12 +1,12 @@
 {% extends "base.html" %}
-{% block title %}{{ t('about.title') }} · {{ config.title }}{% endblock %}
+{% block title %}{{ t('about.title') }} · {{ config.title | loc }}{% endblock %}
 
 {% block content %}
 <h1 class="page-title">{{ t('about.title') }}</h1>
 
 <section class="blk">
-  <h3>{{ config.project_name or config.title }}</h3>
-  {% if config.about_description %}<p>{{ config.about_description }}</p>{% endif %}
+  <h3>{{ config.project_name | loc or config.title | loc }}</h3>
+  {% if config.about_description %}<p>{{ config.about_description | loc }}</p>{% endif %}
   <dl class="kv">
     {% if config.project_url %}
     <dt>{{ t('about.project') }}</dt><dd><a href="{{ config.project_url }}">{{ config.project_url }}</a></dd>

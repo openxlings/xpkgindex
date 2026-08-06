@@ -1,6 +1,6 @@
 {% extends "base.html" %}
 {% import "_macros.html" as m with context %}
-{% block title %}{{ short }} · {{ config.title }}{% endblock %}
+{% block title %}{{ short }} · {{ config.title | loc }}{% endblock %}
 
 {% block content %}
 {% if target %}
