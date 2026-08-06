@@ -96,7 +96,10 @@ class SiteConfig:
     install_command_template: str = "{ref}@{version}"
     install: InstallSection = field(default_factory=InstallSection)
     plugins: List[str] = field(default_factory=list)
-    guides_nav_label: str = "Docs"
+    # A string, or a per-locale map. Consumer-supplied text is never
+    # machine-translated, but an index that wants its section named in each
+    # language can say so; leaving it out uses the framework's own label.
+    guides_nav_label: Any = ""
     guides: List[GuideEntry] = field(default_factory=list)
     # The doc a newcomer should read first. Rendered like any other page, but
     # it also becomes the homepage call to action and the Docs nav target.
@@ -165,7 +168,7 @@ def _load_guides(data: Dict[str, Any]) -> (str, List[GuideEntry]):
     # same thing, so existing configs keep working.
     guides = data.get("docs") or data.get("guides")
     if not isinstance(guides, dict):
-        return "Docs", []
+        return "", []
     entries = []
     for e in guides.get("entries", []):
         if not (e.get("slug") and e.get("path")):
@@ -176,7 +179,7 @@ def _load_guides(data: Dict[str, Any]) -> (str, List[GuideEntry]):
             path=e["path"],
             translations=e.get("translations", {}) or {},
         ))
-    return guides.get("nav_label", "Docs"), entries
+    return guides.get("nav_label", ""), entries
 
 
 def load_config(directory: str, config_path: Optional[str] = None) -> SiteConfig:

@@ -77,15 +77,34 @@ class Renderer:
         """Same page, other locales. Depth is measured inside the locale, so a
         link out of `/zh/packages/x/` has to climb one extra level."""
         up = "../" * (page_path.count("/") + (1 if self.prefix else 0))
-        return [
-            {
+        links = []
+        for code in self.langs:
+            url = up + ("" if code == self.default else f"{code}/") + page_path
+            links.append({
                 "code": code,
                 "name": i18n.LANGUAGE_NAMES.get(code, code),
                 "current": code == self.lang,
-                "url": up + ("" if code == self.default else f"{code}/") + page_path,
-            }
-            for code in self.langs
-        ]
+                # "./" rather than "": the default locale's own homepage
+                # resolves to an empty string, which is not a valid href and
+                # gave the language redirect an empty target to jump to.
+                "url": url or "./",
+            })
+        return links
+
+    def _docs_nav_label(self) -> str:
+        """The Docs section's name in this locale.
+
+        A plain string in the config is used as-is (the index chose that
+        wording); a per-locale map is looked up; nothing at all falls back to
+        the framework's translated label, which is what most indexes want.
+        """
+        label = self.config.guides_nav_label
+        if isinstance(label, dict):
+            for key in (self.lang, self.lang.split("-")[0]):
+                if label.get(key):
+                    return label[key]
+            return self.t("nav.docs_section")
+        return label or self.t("nav.docs_section")
 
     def _docs_home(self) -> str:
         """The doc the Docs nav and the homepage call to action point at.
@@ -109,6 +128,7 @@ class Renderer:
             "page": page,
             "asset_v": self.asset_v,
             "docs_home": self._docs_home(),
+            "docs_nav_label": self._docs_nav_label(),
             "docs_titles": {g["slug"]: self._guide_title(g) for g in self.site.guides},
             "t": self.t,
             "lang": self.lang,

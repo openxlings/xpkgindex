@@ -20,7 +20,7 @@
 
   <aside class="guide-side">
     <section>
-      <h4>{{ config.guides_nav_label or t('nav.docs_section') }}</h4>
+      <h4>{{ docs_nav_label }}</h4>
       <ul class="side-links">
         {% for g in site.guides %}
         <li><a href="{{ root }}docs/{{ g.slug }}/" class="{{ 'on' if g.slug == guide.slug }}">{{ docs_titles.get(g.slug, g.title) }}</a></li>

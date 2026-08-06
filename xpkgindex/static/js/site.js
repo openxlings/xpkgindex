@@ -15,6 +15,15 @@
     });
   }
 
+  // ------------------------------------------------------------- language
+  // Remember an explicit choice, so the browser-language redirect in <head>
+  // stops overriding it from here on.
+  document.querySelectorAll('.lang-menu a[hreflang]').forEach(function (a) {
+    a.addEventListener('click', function () {
+      try { localStorage.setItem('xpi-lang', a.getAttribute('hreflang')); } catch (e) { /* ignore */ }
+    });
+  });
+
   // ----------------------------------------------------------------- copy
   document.addEventListener('click', function (ev) {
     var btn = ev.target.closest('[data-copy]');

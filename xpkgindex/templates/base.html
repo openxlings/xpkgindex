@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="{{ html_lang }}" data-density="{{ config.density }}">
+<html lang="{{ html_lang }}" data-lang="{{ lang }}" data-density="{{ config.density }}">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -17,12 +17,46 @@
    index can re-tone the design system without editing it. #}
 <link rel="stylesheet" href="{{ site_root }}static/css/theme.css?v={{ asset_v }}">
 <script>
-  // Applied before first paint so the page never flashes the wrong theme.
+  // Both run before first paint: the page must never flash the wrong theme,
+  // and a language redirect must happen before anything is rendered.
   (function () {
-    var pref = localStorage.getItem('xpi-theme');
-    var fixed = {{ ('"' + config.style + '"') if config.style in ('light', 'dark') else 'null' }};
-    document.documentElement.dataset.theme = pref || fixed ||
-      (matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+    try {
+      var pref = localStorage.getItem('xpi-theme');
+      var fixed = {{ ('"' + config.style + '"') if config.style in ('light', 'dark') else 'null' }};
+      document.documentElement.dataset.theme = pref || fixed ||
+        (matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+    } catch (e) { /* private mode: fall through to the served markup */ }
+
+    // Send a visitor to the locale their browser asks for — but only until
+    // they choose one themselves, after which the choice sticks across pages
+    // and overrides the browser. Alternates come from the hreflang links, so
+    // this needs no separate list to keep in sync.
+    try {
+      var alts = {};
+      document.querySelectorAll('link[rel="alternate"][hreflang]').forEach(function (l) {
+        alts[l.getAttribute('hreflang')] = l.getAttribute('href');
+      });
+      var current = document.documentElement.getAttribute('data-lang');
+      var chosen = localStorage.getItem('xpi-lang');
+      var want = chosen;
+
+      if (!want) {
+        var codes = Object.keys(alts);
+        var aliases = { 'zh-cn': 'zh', 'zh-hans': 'zh', 'zh-sg': 'zh',
+                        'zh-tw': 'zh-Hant', 'zh-hk': 'zh-Hant', 'zh-mo': 'zh-Hant' };
+        var wanted = navigator.languages || [navigator.language || ''];
+        for (var i = 0; i < wanted.length && !want; i++) {
+          var tag = String(wanted[i]);
+          var candidates = [tag, aliases[tag.toLowerCase()], tag.split('-')[0]];
+          for (var j = 0; j < candidates.length; j++) {
+            if (candidates[j] && codes.indexOf(candidates[j]) !== -1) { want = candidates[j]; break; }
+          }
+        }
+      }
+      if (want && want !== current && alts[want]) {
+        location.replace(alts[want] + location.search + location.hash);
+      }
+    } catch (e) { /* stay on the served locale */ }
   })();
 </script>
 </head>
@@ -43,7 +77,7 @@
       <div class="nav-item{{ ' has-menu' if site.guides | length > 1 }}">
         <a href="{{ root }}docs/{{ docs_home }}/" class="{{ 'on' if page == 'docs' }}"
            {% if site.guides | length > 1 %}aria-haspopup="true"{% endif %}>
-          {{ config.guides_nav_label or t('nav.docs_section') }}
+          {{ docs_nav_label }}
           {% if site.guides | length > 1 %}
           <svg class="nav-caret" viewBox="0 0 10 10" width="8" height="8" aria-hidden="true">
             <path fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"
@@ -52,7 +86,7 @@
           {% endif %}
         </a>
         {% if site.guides | length > 1 %}
-        <div class="nav-menu">
+        <div class="nav-menu menu-pop">
           {% for g in site.guides %}
           <a href="{{ root }}docs/{{ g.slug }}/">{{ docs_titles.get(g.slug, g.title) }}</a>
           {% endfor %}
@@ -100,18 +134,21 @@
         {% endif %}
       </div>
 
+      {# Same affordance as the Docs menu: opens on hover, and on focus so it
+         is reachable by keyboard and by tap where there is no hover. #}
       {% if languages | length > 1 %}
-      <details class="lang">
-        <summary title="{{ t('nav.language') }}" aria-label="{{ t('nav.language') }}">
+      <div class="lang has-menu">
+        <button class="lang-trigger" type="button" aria-haspopup="true"
+                title="{{ t('nav.language') }}" aria-label="{{ t('nav.language') }}">
           <svg viewBox="0 0 16 16" width="15" height="15" aria-hidden="true"><path fill="currentColor" d="M8 0a8 8 0 1 0 0 16A8 8 0 0 0 8 0M5.78 1.66A12 12 0 0 0 4.5 5H2.25a7.02 7.02 0 0 1 3.53-3.34M1.6 6h2.72a15 15 0 0 0 0 4H1.6a7 7 0 0 1 0-4m.65 5H4.5c.3 1.2.73 2.34 1.28 3.34A7.02 7.02 0 0 1 2.25 11M7.5 14.6c-.72-.6-1.5-1.9-1.95-3.6H7.5zm0-4.6H5.32a13.6 13.6 0 0 1 0-4H7.5zm0-5H5.55C6 3.3 6.78 2 7.5 1.4zm6.25 0H11.5a12 12 0 0 0-1.28-3.34A7.02 7.02 0 0 1 13.75 5M8.5 1.4c.72.6 1.5 1.9 1.95 3.6H8.5zm0 4.6h2.18a13.6 13.6 0 0 1 0 4H8.5zm0 8.6V11h1.95c-.45 1.7-1.23 3-1.95 3.6m1.72-.26c.55-1 .98-2.14 1.28-3.34h2.25a7.02 7.02 0 0 1-3.53 3.34M14.4 10h-2.72a15 15 0 0 0 0-4h2.72a7 7 0 0 1 0 4"/></svg>
           <span>{{ lang }}</span>
-        </summary>
-        <div class="lang-menu">
+        </button>
+        <div class="lang-menu menu-pop">
           {% for l in languages %}
           <a href="{{ l.url }}" class="{{ 'on' if l.current }}" hreflang="{{ l.code }}">{{ l.name }}</a>
           {% endfor %}
         </div>
-      </details>
+      </div>
       {% endif %}
 
       <button class="icon-btn theme-toggle" type="button" aria-label="{{ t('nav.theme') }}" title="{{ t('nav.theme') }}">
