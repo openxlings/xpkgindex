@@ -22,10 +22,30 @@ def _anchor(text: str) -> str:
     return s or "section"
 
 
+def _permalink(anchor: str):
+    from markdown_it.token import Token
+    tok = Token("html_inline", "", 0)
+    tok.content = f'<a class="anchor" href="#{anchor}" aria-hidden="true">#</a>'
+    return tok
+
+
 def _render(text: str, base_dir: str, guide_slugs: Dict[str, str],
             depth: int) -> Dict[str, Any]:
-    md = MarkdownIt("commonmark", {"html": False, "linkify": True}).enable("table")
+    # Raw HTML is allowed: these documents belong to the index repository and
+    # are written to render on GitHub too, where `<details>` disclosures are
+    # idiomatic. Escaping them printed the tags as text. The trust level is
+    # the same as the repo's `.lua` descriptors and its plugin — the build
+    # already runs those.
+    md = MarkdownIt("commonmark", {"html": True, "linkify": True}).enable("table")
     tokens = md.parse(text)
+
+    # The document's own H1 becomes the page title and is dropped from the
+    # body: otherwise every guide renders its heading twice, and in the wrong
+    # language whenever the config title and the translation disagree.
+    heading = ""
+    if len(tokens) >= 3 and tokens[0].type == "heading_open" and tokens[0].tag == "h1":
+        heading = tokens[1].content.strip()
+        tokens = tokens[3:]
 
     toc: List[Dict[str, Any]] = []
     counts: Dict[str, int] = {}
@@ -38,11 +58,14 @@ def _render(text: str, base_dir: str, guide_slugs: Dict[str, str],
         counts[base] = counts.get(base, 0) + 1
         anchor = base if counts[base] == 1 else f"{base}-{counts[base]}"
         tok.attrSet("id", anchor)
+        # Permalink, so a section of a guide can be linked to directly. Added
+        # to the token stream rather than to the markdown, which stays plain.
+        inline.children.append(_permalink(anchor))
         toc.append({"level": int(tok.tag[1]), "title": title, "anchor": anchor})
 
     html = md.renderer.render(tokens, md.options, {})
     html = _rewrite_links(html, base_dir, guide_slugs, depth)
-    return {"html": html, "toc": toc}
+    return {"html": html, "toc": toc, "heading": heading}
 
 
 def _rewrite_links(html: str, base_dir: str, guide_slugs: Dict[str, str],
@@ -59,7 +82,7 @@ def _rewrite_links(html: str, base_dir: str, guide_slugs: Dict[str, str],
         slug = guide_slugs.get(target)
         if slug:
             frag = href.split("#", 1)[1] if "#" in href else ""
-            return f'href="{up}guides/{slug}/{("#" + frag) if frag else ""}"'
+            return f'href="{up}docs/{slug}/{("#" + frag) if frag else ""}"'
         return match.group(0)
 
     return re.sub(r'href="([^"]+)"', repl, html)

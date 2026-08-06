@@ -97,6 +97,28 @@
     select(chosen);
   });
 
+  // ---------------------------------------------------------------- docs
+  // Copy buttons on rendered markdown code blocks. Added here rather than in
+  // the renderer so the docs stay plain markdown that also reads correctly
+  // on GitHub.
+  document.querySelectorAll('.prose pre').forEach(function (pre) {
+    var code = pre.querySelector('code');
+    if (!code) return;
+    var wrap = document.createElement('div');
+    wrap.className = 'prose-code';
+    pre.parentNode.insertBefore(wrap, pre);
+    wrap.appendChild(pre);
+    var btn = document.createElement('button');
+    btn.type = 'button';
+    btn.className = 'copy';
+    btn.setAttribute('data-copy', code.textContent.replace(/\n$/, ''));
+    btn.setAttribute('aria-label', 'Copy code');
+    btn.innerHTML = '<svg viewBox="0 0 16 16" width="13" height="13" aria-hidden="true">' +
+      '<path fill="currentColor" d="M4 1.5H3a2 2 0 0 0-2 2V14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V3.5a2 2 0 0 0-2-2h-1v1h1a1 1 0 0 1 1 1V14a1 1 0 0 1-1 1H3a1 1 0 0 1-1-1V3.5a1 1 0 0 1 1-1h1z"/>' +
+      '<path fill="currentColor" d="M9.5 1a.5.5 0 0 1 .5.5v1a.5.5 0 0 1-.5.5h-3a.5.5 0 0 1-.5-.5v-1a.5.5 0 0 1 .5-.5zm-3-1A1.5 1.5 0 0 0 5 1.5v1A1.5 1.5 0 0 0 6.5 4h3A1.5 1.5 0 0 0 11 2.5v-1A1.5 1.5 0 0 0 9.5 0z"/></svg>';
+    wrap.appendChild(btn);
+  });
+
   // --------------------------------------------------------------- search
   // Type-ahead over search-index.json. Available on every page: pressing
   // Enter opens the best-matching package rather than bouncing the visitor

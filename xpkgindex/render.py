@@ -87,6 +87,17 @@ class Renderer:
             for code in self.langs
         ]
 
+    def _docs_home(self) -> str:
+        """The doc the Docs nav and the homepage call to action point at.
+
+        The configured landing page when it exists, otherwise simply the first
+        one — a site should never link to a Docs section that 404s.
+        """
+        slugs = [g["slug"] for g in self.site.guides]
+        if self.config.docs_landing in slugs:
+            return self.config.docs_landing
+        return slugs[0] if slugs else ""
+
     def _ctx(self, page_path: str, page: str, **extra: Any) -> Dict[str, Any]:
         depth = page_path.count("/")
         root = "../" * depth
@@ -97,6 +108,7 @@ class Renderer:
             "site_root": root + ("../" if self.prefix else ""),   # shared assets/data
             "page": page,
             "asset_v": self.asset_v,
+            "docs_home": self._docs_home(),
             "t": self.t,
             "lang": self.lang,
             "html_lang": self.t.html_lang,
@@ -166,9 +178,17 @@ class Renderer:
                      own=[u for u in self.site.upstreams if u.is_own])
 
     def guides(self) -> None:
+        # Titles follow the locale: a doc that ships a translation names
+        # itself in that language, in the sidebar as well as on the page.
+        titles = {g["slug"]: self._guide_title(g) for g in self.site.guides}
         for guide in self.site.guides:
-            self._render("guide.html", f"guides/{guide['slug']}/", "guides",
-                         guide=guide, body=self._guide_body(guide))
+            self._render("guide.html", f"docs/{guide['slug']}/", "docs",
+                         guide=guide, body=self._guide_body(guide),
+                         docs_titles=titles)
+
+    def _guide_title(self, guide: Dict[str, Any]) -> str:
+        body = self._guide_body(guide)
+        return body.get("heading") or guide["title"]
 
     def _guide_body(self, guide: Dict[str, Any]) -> Dict[str, Any]:
         """Use the consumer's translation for this locale when it exists.
@@ -216,7 +236,7 @@ class Renderer:
         base = self.config.base_url.rstrip("/")
         paths = ["", "stats/", "contributors/", "about/"]
         paths += [f"packages/{p.slug}/" for p in self.site.packages]
-        paths += [f"guides/{g['slug']}/" for g in self.site.guides]
+        paths += [f"docs/{g['slug']}/" for g in self.site.guides]
         urls = list(paths)
         for lang in self.langs[1:]:
             urls += [f"{lang}/{p}" for p in paths]

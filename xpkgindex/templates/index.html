@@ -20,6 +20,9 @@
   {# Every platform's command is rendered; site.js reveals only the matching
      one and turns the labels into a switcher, so a JS-less visitor still
      sees them all. #}
+  {% if config.install or docs_home %}
+  <div class="hero-actions">
+  {% endif %}
   {% if config.install %}
   <div class="install">
     {% if config.install.command %}
@@ -42,6 +45,23 @@
     </div>
     {% endif %}
     {% endif %}
+  </div>
+  {% endif %}
+
+  {# Beside the install command, not under it: the two together are "get it,
+     then learn it", and a newcomer should not have to find the docs in the
+     nav bar. #}
+  {% if docs_home %}
+  <a class="cta" href="{{ root }}docs/{{ docs_home }}/">
+    <span class="cta-label">{{ config.docs_cta_label or t('home.quick_start') }}</span>
+    <svg class="cta-arrow" viewBox="0 0 16 16" width="16" height="16" aria-hidden="true">
+      <path fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"
+            stroke-linejoin="round" d="M3 8h9M8.5 4.5 12 8l-3.5 3.5"/>
+    </svg>
+  </a>
+  {% endif %}
+
+  {% if config.install or docs_home %}
   </div>
   {% endif %}
 </section>

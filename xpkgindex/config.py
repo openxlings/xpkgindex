@@ -96,8 +96,12 @@ class SiteConfig:
     install_command_template: str = "{ref}@{version}"
     install: InstallSection = field(default_factory=InstallSection)
     plugins: List[str] = field(default_factory=list)
-    guides_nav_label: str = "Guides"
+    guides_nav_label: str = "Docs"
     guides: List[GuideEntry] = field(default_factory=list)
+    # The doc a newcomer should read first. Rendered like any other page, but
+    # it also becomes the homepage call to action and the Docs nav target.
+    docs_landing: str = ""
+    docs_cta_label: str = ""
     ecosystem_owners: List[str] = field(default_factory=list)
     ecosystem_repos: List[str] = field(default_factory=list)
     identities_path: str = ".xpkgindex/identities.json"
@@ -154,9 +158,11 @@ def _load_install(data: Dict[str, Any]) -> InstallSection:
 
 
 def _load_guides(data: Dict[str, Any]) -> (str, List[GuideEntry]):
-    guides = data.get("guides")
+    # `docs` is the current spelling; `guides` is the older one and means the
+    # same thing, so existing configs keep working.
+    guides = data.get("docs") or data.get("guides")
     if not isinstance(guides, dict):
-        return "Guides", []
+        return "Docs", []
     entries = []
     for e in guides.get("entries", []):
         if not (e.get("slug") and e.get("path")):
@@ -167,7 +173,7 @@ def _load_guides(data: Dict[str, Any]) -> (str, List[GuideEntry]):
             path=e["path"],
             translations=e.get("translations", {}) or {},
         ))
-    return guides.get("nav_label", "Guides"), entries
+    return guides.get("nav_label", "Docs"), entries
 
 
 def load_config(directory: str, config_path: Optional[str] = None) -> SiteConfig:
@@ -218,6 +224,9 @@ def load_config(directory: str, config_path: Optional[str] = None) -> SiteConfig
     cfg.install = _load_install(data)
     cfg.plugins = data.get("plugins", []) or []
     cfg.guides_nav_label, cfg.guides = _load_guides(data)
+    docs_cfg = data.get("docs") or data.get("guides") or {}
+    cfg.docs_landing = docs_cfg.get("landing", "")
+    cfg.docs_cta_label = docs_cfg.get("cta_label", "")
 
     eco = data.get("ecosystem", {}) or {}
     cfg.ecosystem_owners = eco.get("owners", []) or []

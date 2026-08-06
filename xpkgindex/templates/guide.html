@@ -6,10 +6,10 @@
 <div class="guide">
   <div class="guide-main">
     <nav class="crumbs">
-      <a href="{{ root }}guides/{{ site.guides[0].slug }}/">{{ config.guides_nav_label or t('guide.guides') }}</a>
-      <span>/</span> {{ guide.title }}
+      <a href="{{ root }}docs/{{ site.guides[0].slug }}/">{{ config.guides_nav_label or t('guide.guides') }}</a>
+      <span>/</span> {{ body.heading or guide.title }}
     </nav>
-    <h1 class="page-title">{{ guide.title }}</h1>
+    <h1 class="page-title">{{ body.heading or guide.title }}</h1>
     {# The guide body follows the site language when the index ships a
        translation for it, and stays as authored when it does not. #}
     <p class="muted small">{{ t('guide.rendered_from', path=guide.source) }}</p>
@@ -20,11 +20,14 @@
 
   <aside class="guide-side">
     <section>
-      <h4>{{ t('guide.guides') }}</h4>
+      <h4>{{ config.guides_nav_label or t('nav.docs_section') }}</h4>
       <ul class="side-links">
         {% for g in site.guides %}
-        <li><a href="{{ root }}guides/{{ g.slug }}/" class="{{ 'on' if g.slug == guide.slug }}">{{ g.title }}</a></li>
+        <li><a href="{{ root }}docs/{{ g.slug }}/" class="{{ 'on' if g.slug == guide.slug }}">{{ docs_titles.get(g.slug, g.title) }}</a></li>
         {% endfor %}
+        {# About belongs in this list as well as in the nav: from inside the
+           docs it reads as one more thing to know about the index. #}
+        <li><a href="{{ root }}about/">{{ t('about.title') }}</a></li>
       </ul>
     </section>
 

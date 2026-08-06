@@ -36,9 +36,11 @@
       <a href="{{ root }}" class="{{ 'on' if page in ('home', 'packages') }}">{{ t('nav.packages') }}</a>
       <a href="{{ root }}stats/" class="{{ 'on' if page == 'stats' }}">{{ t('nav.stats') }}</a>
       <a href="{{ root }}contributors/" class="{{ 'on' if page == 'contributors' }}">{{ t('nav.contributors') }}</a>
-      {% if site.guides %}
-      <a href="{{ root }}guides/{{ site.guides[0].slug }}/" class="{{ 'on' if page == 'guides' }}">{{ config.guides_nav_label or t('nav.guides') }}</a>
+      {% if docs_home %}
+      <a href="{{ root }}docs/{{ docs_home }}/" class="{{ 'on' if page == 'docs' }}">{{ config.guides_nav_label or t('nav.docs_section') }}</a>
       {% endif %}
+      {# About keeps its own nav slot as well as its entry under Docs: it is
+         where people look for "what is this index", not a document. #}
       <a href="{{ root }}about/" class="{{ 'on' if page == 'about' }}">{{ t('nav.about') }}</a>
     </nav>
 
