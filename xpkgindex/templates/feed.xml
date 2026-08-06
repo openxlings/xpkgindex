@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<feed xmlns="http://www.w3.org/2005/Atom">
+  <title>{{ config.title }}</title>
+  <link href="{{ base }}/"/>
+  <link rel="self" href="{{ base }}/feed.xml"/>
+  <id>{{ base }}/</id>
+  <subtitle>{{ config.description }}</subtitle>
+{% for ev in events %}
+  <entry>
+    <title>{{ ev.kind }}: {{ ev.display }}</title>
+    <id>{{ base }}/packages/{{ ev.slug }}/#{{ ev.date }}-{{ loop.index }}</id>
+    <link href="{{ base }}/packages/{{ ev.slug }}/"/>
+    <updated>{{ ev.date }}T00:00:00Z</updated>
+    <summary>{{ ev.subject or ev.kind }}{% if ev.by %} — {{ ev.by }}{% endif %}</summary>
+  </entry>
+{% endfor %}
+</feed>

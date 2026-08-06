@@ -1,174 +1,195 @@
 {% extends "base.html" %}
+{% import "_macros.html" as m with context %}
 
-{% block title %}{{ package.name }} - {{ config.title }}{% endblock %}
+{% block title %}{{ pkg.display }} · {{ config.title }}{% endblock %}
+{% block description %}{{ pkg.description or pkg.display }}{% endblock %}
 
 {% block content %}
-<div class="pkg-detail">
-    <a href="../index.html" class="back-link">&larr; Back to packages</a>
+<nav class="crumbs"><a href="{{ root }}">{{ t('nav.packages') }}</a> <span>/</span> <code>{{ pkg.display }}</code></nav>
 
-    <div class="pkg-header">
-        <h1 class="pkg-name">{{ package.name }}</h1>
-        <div class="pkg-badges">
-            <span class="badge badge-status badge-{{ package.status }}">{{ package.status }}</span>
-            <span class="badge badge-type">{{ package.type }}</span>
-        </div>
-    </div>
+<div class="detail">
+  <div class="detail-main">
+    <header class="pkg-head tone-{{ pkg.tone }}">
+      <h1 class="pkg-name">
+        {% set parts = pkg.identity.display_parts %}
+        {% if parts[0] %}<span class="ns">{{ parts[0] }}</span>{% endif %}{{ parts[1] }}
+      </h1>
+      {% if pkg.interface %}
+      <span class="tone-badge">{{ pkg.interface.data.get('label', pkg.tone) }}</span>
+      {% endif %}
+      {% if pkg.type and pkg.type != 'package' %}<span class="badge">{{ pkg.type }}</span>{% endif %}
+    </header>
+    {% if pkg.description %}<p class="lede">{{ pkg.description }}</p>{% endif %}
 
-    {% if install_command %}
-    <div class="install-box">
-        <code class="install-cmd" id="install-cmd">{{ install_command }}</code>
-        <button class="btn-copy" id="copy-btn" data-target="install-cmd" title="Copy to clipboard">Copy</button>
+    {% if pkg.interface %}
+    <div class="iface tone-{{ pkg.tone }}">
+      {{ m.cmd(pkg.interface.data.code, primary=True) }}
+      {# Some packages are consumable in more than one way — a module that also
+         exposes its headers. Showing only the first would hide a real option. #}
+      {% for alt in pkg.interface.data.get('alt', []) %}
+      <div class="tone-{{ alt.tone }}">{{ m.cmd(alt.code, primary=True) }}</div>
+      {% endfor %}
+      {% if pkg.interface.data.get('note') %}
+      <p class="muted small iface-note">{{ pkg.interface.data.note }}</p>
+      {% endif %}
     </div>
     {% endif %}
+    {% if pkg.install_command %}{{ m.cmd(pkg.install_command) }}{% endif %}
 
-    {% if package.description %}
-    <section class="pkg-section">
-        <h2>Description</h2>
-        <p>{{ package.description }}</p>
-    </section>
-    {% endif %}
-
-    <section class="pkg-section">
-        <h2>Metadata</h2>
-        <div class="meta-grid">
-            {% if package.platforms %}
-                {% set versions = [] %}
-                {% for pname, pinfo in package.platforms.items() %}
-                    {% if pinfo.latest_version and pinfo.latest_version not in versions %}
-                        {% if versions.append(pinfo.latest_version) %}{% endif %}
-                    {% endif %}
-                {% endfor %}
-                {% if versions %}
-                <div class="meta-item">
-                    <span class="meta-label">Latest Version</span>
-                    <span class="meta-value">{{ versions[0] }}</span>
-                </div>
-                {% endif %}
-            {% endif %}
-            {% if package.licenses %}
-            <div class="meta-item">
-                <span class="meta-label">License</span>
-                <span class="meta-value">{{ package.licenses | join(', ') }}</span>
-            </div>
-            {% endif %}
-            {% if package.authors %}
-            <div class="meta-item">
-                <span class="meta-label">Authors</span>
-                <span class="meta-value">{{ package.authors | join(', ') }}</span>
-            </div>
-            {% endif %}
-            {% if package.maintainers %}
-            <div class="meta-item">
-                <span class="meta-label">Maintainers</span>
-                <span class="meta-value">{{ package.maintainers | join(', ') }}</span>
-            </div>
-            {% endif %}
-            {% if package.categories %}
-            <div class="meta-item">
-                <span class="meta-label">Categories</span>
-                <span class="meta-value">
-                    {% for cat in package.categories %}
-                    <span class="tag">{{ cat }}</span>
-                    {% endfor %}
-                </span>
-            </div>
-            {% endif %}
-            {% if package.keywords %}
-            <div class="meta-item">
-                <span class="meta-label">Keywords</span>
-                <span class="meta-value">
-                    {% for kw in package.keywords %}
-                    <span class="tag tag-keyword">{{ kw }}</span>
-                    {% endfor %}
-                </span>
-            </div>
-            {% endif %}
-            {% if package.archs %}
-            <div class="meta-item">
-                <span class="meta-label">Architectures</span>
-                <span class="meta-value">{{ package.archs | join(', ') }}</span>
-            </div>
-            {% endif %}
-            {% if package.programs %}
-            <div class="meta-item">
-                <span class="meta-label">Programs</span>
-                <span class="meta-value">{{ package.programs | join(', ') }}</span>
-            </div>
-            {% endif %}
-            <div class="meta-item">
-                <span class="meta-label">XVM Managed</span>
-                <span class="meta-value">{{ 'Yes' if package.xvm_enable else 'No' }}</span>
-            </div>
-        </div>
-    </section>
-
-    {% if package.platforms %}
-    <section class="pkg-section">
-        <h2>Platforms &amp; Versions</h2>
-        <div class="table-wrap">
-            <table class="platform-table">
-                <thead>
-                    <tr>
-                        <th>Platform</th>
-                        <th>Latest</th>
-                        <th>Available Versions</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {% for pname, pinfo in package.platforms.items() %}
-                    <tr>
-                        <td>
-                            {% if pname == 'linux' %}{{ icon_linux(16) }} Linux
-                            {% elif pname == 'windows' %}{{ icon_windows(16) }} Windows
-                            {% elif pname == 'macosx' %}{{ icon_macos(16) }} macOS
-                            {% else %}{{ pname }}
-                            {% endif %}
-                        </td>
-                        <td><span class="badge badge-version">{{ pinfo.latest_version or 'N/A' }}</span></td>
-                        <td>{{ pinfo.versions | join(', ') if pinfo.versions else 'N/A' }}</td>
-                    </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
-        </div>
-    </section>
-
-    {% set all_deps = [] %}
-    {% for pname, pinfo in package.platforms.items() %}
-        {% for dep in pinfo.deps %}
-            {% if dep not in all_deps %}
-                {% if all_deps.append(dep) %}{% endif %}
-            {% endif %}
-        {% endfor %}
+    {% for b in pkg.detail_blocks() %}
+      {{ m.block(b) }}
     {% endfor %}
-    {% if all_deps %}
-    <section class="pkg-section">
-        <h2>Dependencies</h2>
-        <ul class="dep-list">
-            {% for dep in all_deps %}
-            <li>{{ dep }}</li>
+
+    {% if pkg.versions %}
+    <section class="blk">
+      <h3>{{ t('pkg.versions') }}</h3>
+      <div class="table-wrap">
+        <table class="versions">
+          <thead>
+            <tr>
+              <th>{{ t('pkg.version') }}</th><th>{{ t('pkg.platforms') }}</th>
+              <th>{{ t('pkg.mirrors') }}</th><th>sha256</th>
+            </tr>
+          </thead>
+          <tbody>
+          {% for v in pkg.versions[:5] %}
+            <tr>
+              <td><code>{{ v.version }}</code>{% if v.version == pkg.latest %} <span class="pill">{{ t('pkg.latest') }}</span>{% endif %}</td>
+              <td>{% for p in v.platforms %}<span class="plat">{{ p | platform_label }}</span>{% endfor %}</td>
+              <td>
+                {% for key, url in v.urls.items() %}
+                <a class="mirror" href="{{ url }}">{{ t('pkg.source') if key == 'DEFAULT' else key }}</a>
+                {% endfor %}
+              </td>
+              <td><code class="sha" title="{{ v.sha256 }}">{{ v.sha256[:12] }}{{ '…' if v.sha256 }}</code></td>
+            </tr>
+          {% endfor %}
+          </tbody>
+        </table>
+      </div>
+      {% if pkg.versions | length > 5 %}
+      <details class="more-versions">
+        <summary>{{ t('pkg.show_all_versions', n=pkg.versions | length) }}</summary>
+        <div class="table-wrap">
+          <table class="versions">
+            <tbody>
+            {% for v in pkg.versions[5:] %}
+              <tr>
+                <td><code>{{ v.version }}</code></td>
+                <td>{% for p in v.platforms %}<span class="plat">{{ p | platform_label }}</span>{% endfor %}</td>
+                <td>{% for key, url in v.urls.items() %}<a class="mirror" href="{{ url }}">{{ t('pkg.source') if key == 'DEFAULT' else key }}</a>{% endfor %}</td>
+                <td><code class="sha" title="{{ v.sha256 }}">{{ v.sha256[:12] }}{{ '…' if v.sha256 }}</code></td>
+              </tr>
             {% endfor %}
-        </ul>
+            </tbody>
+          </table>
+        </div>
+      </details>
+      {% endif %}
     </section>
     {% endif %}
+  </div>
+
+  <aside class="detail-side">
+    <section>
+      <h4>{{ t('pkg.facts') }}</h4>
+      <dl class="side-kv">
+        {% if pkg.latest %}<dt>{{ t('pkg.latest') }}</dt><dd><code>{{ pkg.latest }}</code></dd>{% endif %}
+        {% if pkg.licenses %}<dt>{{ t('pkg.license') }}</dt><dd>{{ pkg.licenses | join(', ') }}</dd>{% endif %}
+        {% if pkg.platforms %}
+        <dt>{{ t('pkg.platforms') }}</dt>
+        <dd>{% for p in pkg.platforms %}<span class="plat">{{ p | platform_label }}</span>{% endfor %}</dd>
+        {% endif %}
+        {% for key, value in pkg.facets.items() %}
+        <dt>{{ key }}</dt>
+        <dd>
+          {{ value }}
+          {% if key == 'namespace' and pkg.namespace_implicit %}
+          <span class="muted small" title="{{ t('pkg.index_default_hint') }}">{{ t('pkg.index_default') }}</span>
+          {% endif %}
+        </dd>
+        {% endfor %}
+        <dt>{{ t('pkg.dependencies') }}</dt>
+        <dd>
+          {% if pkg.deps %}
+            {% for d in pkg.deps %}<code class="dep">{{ d }}</code>{% endfor %}
+          {% else %}<span class="muted">{{ t('pkg.none') }}</span>{% endif %}
+        </dd>
+        <dt>{{ t('pkg.required_by') }}</dt>
+        <dd>
+          {% if pkg.required_by %}
+            {% for slug in pkg.required_by %}
+            <a class="dep" href="{{ root }}packages/{{ slug }}/"><code>{{ slug }}</code></a>
+            {% endfor %}
+          {% else %}<span class="muted">{{ t('pkg.none') }}</span>{% endif %}
+        </dd>
+      </dl>
+    </section>
+
+    {% if pkg.people.upstream or pkg.people.descriptor %}
+    <section>
+      <h4>{{ t('pkg.people') }}</h4>
+      {% if pkg.people.upstream and pkg.people.upstream.owner %}
+      <div class="who-label">{{ t('pkg.upstream') }}</div>
+      <a class="who" href="{{ pkg.people.upstream.url or pkg.repo }}">
+        {% if pkg.people.upstream.avatar %}
+        <img class="av" src="{{ pkg.people.upstream.avatar }}" width="26" height="26" alt="" loading="lazy">
+        {% else %}<span class="av av-blank" aria-hidden="true">{{ pkg.people.upstream.owner[0] | upper }}</span>{% endif %}
+        <span>
+          <code>{{ pkg.people.upstream.owner }}</code>
+          {% if pkg.people.upstream.stars is not none %}
+          <span class="muted small">{{ pkg.people.upstream.stars }}★</span>
+          {% endif %}
+        </span>
+      </a>
+      {% endif %}
+      {% if pkg.people.descriptor %}
+      <div class="who-label">{{ t('pkg.descriptor') }}</div>
+      {% for person in pkg.people.descriptor %}
+      <a class="who" {% if person.url %}href="{{ person.url }}"{% endif %}>
+        {% if person.avatar %}
+        <img class="av" src="{{ person.avatar }}" width="26" height="26" alt="" loading="lazy">
+        {% else %}<span class="av av-blank" aria-hidden="true">{{ (person.login or person.name or '?')[0] | upper }}</span>{% endif %}
+        <span>
+          {{ person.login or person.name }}
+          {% if person.added %}<span class="muted small">{{ t('pkg.added') }}</span>{% endif %}
+        </span>
+      </a>
+      {% endfor %}
+      {% endif %}
+    </section>
     {% endif %}
 
-    {% if package.homepage or package.repo or package.docs %}
-    <section class="pkg-section">
-        <h2>Links</h2>
-        <div class="pkg-links">
-            {% if package.homepage %}
-            <a href="{{ package.homepage }}" target="_blank" rel="noopener" class="pkg-link">Homepage</a>
-            {% endif %}
-            {% if package.repo %}
-            <a href="{{ package.repo }}" target="_blank" rel="noopener" class="pkg-link">Repository</a>
-            {% endif %}
-            {% if package.docs %}
-            <a href="{{ package.docs }}" target="_blank" rel="noopener" class="pkg-link">Documentation</a>
-            {% endif %}
-        </div>
+    <section>
+      <h4>{{ t('pkg.links') }}</h4>
+      <ul class="side-links">
+        {% if pkg.repo %}<li><a href="{{ pkg.repo }}">{{ t('pkg.upstream_repo') }}</a></li>{% endif %}
+        {% if pkg.homepage %}<li><a href="{{ pkg.homepage }}">{{ t('pkg.homepage') }}</a></li>{% endif %}
+        {% if pkg.docs %}<li><a href="{{ pkg.docs }}">{{ t('pkg.docs') }}</a></li>{% endif %}
+        {% if config.github and pkg.source_file %}
+        <li><a href="{{ config.github }}/blob/main/{{ pkg.source_file }}">{{ t('pkg.descriptor_source') }}</a></li>
+        {% endif %}
+        {% if site.guides %}
+        <li><a href="{{ root }}guides/{{ site.guides[0].slug }}/">{{ t('pkg.add_like_this') }}</a></li>
+        {% endif %}
+      </ul>
+    </section>
+
+    {% if pkg.history %}
+    <section>
+      <h4>{{ t('pkg.history') }}</h4>
+      {# Full stream here, including several entries from one bump day — the
+         detail page is where the exact sequence matters. #}
+      <ol class="timeline compact">
+        {% for ev in pkg.history[:8] %}
+        <li class="tl-{{ ev.kind }}">
+          <span class="tl-date wide">{{ ev.date }} {% if ev.clock %}<i>{{ ev.clock }}</i>{% endif %}</span>
+          <span class="tl-body">{{ t('kind.' ~ ev.kind) }}{% if ev.by %} · {{ ev.by }}{% endif %}</span>
+        </li>
+        {% endfor %}
+      </ol>
     </section>
     {% endif %}
+  </aside>
 </div>
 {% endblock %}
-

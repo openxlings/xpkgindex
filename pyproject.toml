@@ -4,10 +4,18 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "xpkgindex"
-version = "0.1.0"
-description = "Static site generator for xpkg package indexes"
-requires-python = ">=3.8"
-dependencies = ["jinja2>=3.0", "lupa>=2.0"]
+version = "0.2.0"
+description = "Static site framework for package indexes — core + ecosystem plugins"
+readme = "README.md"
+requires-python = ">=3.9"
+dependencies = [
+    "jinja2>=3.0",
+    "lupa>=2.0",
+    "markdown-it-py>=3.0",
+]
+
+[project.optional-dependencies]
+dev = ["pytest>=7.0"]
 
 [project.scripts]
 xpkgindex = "xpkgindex.cli:main"
@@ -17,4 +25,7 @@ where = ["."]
 include = ["xpkgindex*"]
 
 [tool.setuptools.package-data]
-xpkgindex = ["templates/**/*.html", "static/**/*"]
+xpkgindex = ["templates/**/*.html", "templates/**/*.xml", "static/**/*"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]

@@ -1,70 +1,64 @@
 {% extends "base.html" %}
-
-{% block title %}About - {{ config.title }}{% endblock %}
+{% block title %}{{ t('about.title') }} · {{ config.title }}{% endblock %}
 
 {% block content %}
-<div class="about-page">
-    <h1 class="about-title">{{ config.project_name or config.title }}</h1>
+<h1 class="page-title">{{ t('about.title') }}</h1>
 
-    {% if config.about_description %}
-    <section class="about-section">
-        <h2>About</h2>
-        <p>{{ config.about_description }}</p>
-    </section>
+<section class="blk">
+  <h3>{{ config.project_name or config.title }}</h3>
+  {% if config.about_description %}<p>{{ config.about_description }}</p>{% endif %}
+  <dl class="kv">
+    {% if config.project_url %}
+    <dt>{{ t('about.project') }}</dt><dd><a href="{{ config.project_url }}">{{ config.project_url }}</a></dd>
     {% endif %}
-
-    {% if config.project_url or config.github %}
-    <section class="about-section">
-        <h2>Repository</h2>
-        <div class="about-links">
-            {% if config.project_url %}
-            <a href="{{ config.project_url }}" target="_blank" rel="noopener" class="pkg-link">Project Homepage</a>
-            {% endif %}
-            {% if config.github %}
-            <a href="{{ config.github }}" target="_blank" rel="noopener" class="pkg-link">GitHub Repository</a>
-            {% endif %}
-        </div>
-    </section>
+    {% if config.github %}
+    <dt>{{ t('about.index_repo') }}</dt><dd><a href="{{ config.github }}">{{ config.github }}</a></dd>
     {% endif %}
-
     {% if config.maintainers %}
-    <section class="about-section">
-        <h2>Maintainers</h2>
-        <ul class="maintainer-list">
-            {% for m in config.maintainers %}
-            <li>{{ m }}</li>
-            {% endfor %}
-        </ul>
-    </section>
+    <dt>{{ t('about.maintainers') }}</dt><dd>{{ config.maintainers | join(', ') }}</dd>
     {% endif %}
+    {% if config.license %}<dt>{{ t('about.license') }}</dt><dd>{{ config.license }}</dd>{% endif %}
+    {% for key, value in site.index_meta.fields.items() %}
+      {% if key != 'hero_stats' %}
+      <dt>{{ key }}</dt><dd><code>{{ value }}</code></dd>
+      {% endif %}
+    {% endfor %}
+  </dl>
+</section>
 
-    {% if config.license %}
-    <section class="about-section">
-        <h2>License</h2>
-        <p>{{ config.license }}</p>
-    </section>
+<section class="blk">
+  <h3>{{ t('about.data') }}</h3>
+  <p class="blk-caption">{{ t('about.data_caption') }}</p>
+  <ul class="side-links">
+    <li><a href="{{ site_root }}index.json">index.json</a> — {{ t('about.everything') }}</li>
+    <li><a href="{{ site_root }}search-index.json">search-index.json</a> — {{ t('about.search_payload') }}</li>
+    <li><a href="{{ site_root }}packages.json">packages.json</a> — {{ t('about.legacy') }}</li>
+    <li><a href="{{ site_root }}feed.xml">feed.xml</a> · <a href="{{ site_root }}sitemap.xml">sitemap.xml</a></li>
+  </ul>
+  <p class="muted small">{{ t('about.each_package', path='packages/<id>/index.json') }}</p>
+</section>
+
+{% if site.build.time or site.build.commit %}
+<section class="blk">
+  <h3>{{ t('about.build') }}</h3>
+  <dl class="kv">
+    {% if site.build.time %}<dt>{{ t('about.time') }}</dt><dd><code>{{ site.build.time }}</code></dd>{% endif %}
+    {% if site.build.commit %}
+    <dt>{{ t('about.commit') }}</dt>
+    <dd><a href="{{ site.build.commit_url or '#' }}"><code>{{ site.build.commit }}</code></a></dd>
     {% endif %}
+    {% if site.build.generator %}<dt>{{ t('about.generator') }}</dt><dd><code>{{ site.build.generator }}</code></dd>{% endif %}
+  </dl>
+</section>
+{% endif %}
 
-    {% if build_info %}
-    <section class="about-section about-build-info">
-        <h2>Build Info</h2>
-        {% if build_info.time %}
-        <p>Site built at <code>{{ build_info.time }}</code></p>
-        {% endif %}
-        {% if build_info.commit %}
-        <p>From commit
-            {% if build_info.commit_url %}
-            <a href="{{ build_info.commit_url }}" target="_blank" rel="noopener"><code>{{ build_info.commit_short }}</code></a>
-            {% else %}
-            <code>{{ build_info.commit_short }}</code>
-            {% endif %}
-        </p>
-        {% endif %}
-    </section>
-    {% endif %}
-
-    <section class="about-section about-footer">
-        <p>Built with <a href="https://github.com/openxlings/xpkgindex" target="_blank" rel="noopener">xpkgindex</a></p>
-    </section>
-</div>
+{% if site.warnings %}
+<section class="blk">
+  <h3>{{ t('about.warnings') }}</h3>
+  <p class="blk-caption">{{ t('about.warnings_caption') }}</p>
+  <ul class="blk-list warn-list">
+    {% for w in site.warnings %}<li>{{ w }}</li>{% endfor %}
+  </ul>
+</section>
+{% endif %}
 {% endblock %}

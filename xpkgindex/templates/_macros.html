@@ -1,0 +1,226 @@
+{# Shared building blocks. Plugins never write HTML: they emit Block records
+   and this file decides how each kind looks, so every consumer site stays
+   visually consistent. #}
+
+{% macro copy_button(target) %}
+<button class="copy" type="button" data-copy="{{ target }}" aria-label="Copy to clipboard" title="Copy">
+  <svg viewBox="0 0 16 16" width="13" height="13" aria-hidden="true"><path fill="currentColor" d="M4 1.5H3a2 2 0 0 0-2 2V14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V3.5a2 2 0 0 0-2-2h-1v1h1a1 1 0 0 1 1 1V14a1 1 0 0 1-1 1H3a1 1 0 0 1-1-1V3.5a1 1 0 0 1 1-1h1z"/><path fill="currentColor" d="M9.5 1a.5.5 0 0 1 .5.5v1a.5.5 0 0 1-.5.5h-3a.5.5 0 0 1-.5-.5v-1a.5.5 0 0 1 .5-.5zm-3-1A1.5 1.5 0 0 0 5 1.5v1A1.5 1.5 0 0 0 6.5 4h3A1.5 1.5 0 0 0 11 2.5v-1A1.5 1.5 0 0 0 9.5 0z"/></svg>
+</button>
+{% endmacro %}
+
+{% macro cmd(text, primary=False) %}
+<div class="cmd{{ ' cmd-primary' if primary }}">
+  <code>{{ text }}</code>
+  {{ copy_button(text) }}
+</div>
+{% endmacro %}
+
+{% macro chart(c) %}
+{# No preserveAspectRatio override: the axis labels are real text and would
+   shear if the viewBox were stretched independently. #}
+<svg class="chart" viewBox="0 0 {{ c.width }} {{ c.height }}" role="img"
+     aria-label="Package count over time, ending at {{ c.last.value }}">
+  <defs>
+    <linearGradient id="{{ c.gradient_id }}" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="var(--tone-accent)" stop-opacity=".22"/>
+      <stop offset="100%" stop-color="var(--tone-accent)" stop-opacity="0"/>
+    </linearGradient>
+  </defs>
+  {% for tick in c.ticks %}
+  <line class="grid" x1="30" y1="{{ tick.y }}" x2="{{ c.width - 8 }}" y2="{{ tick.y }}"/>
+  <text class="tick" x="24" y="{{ tick.y + 3 }}" text-anchor="end">{{ tick.label }}</text>
+  {% endfor %}
+  <path class="area" d="{{ c.area }}" fill="url(#{{ c.gradient_id }})"/>
+  {# One line per configured series; the first is the total and owns the area. #}
+  {% for l in c.lines %}
+  <path class="line" d="{{ l.path }}" style="stroke: {{ l.color }}"/>
+  <circle class="dot-end" cx="{{ l.last.x }}" cy="{{ l.last.y }}" r="3" style="fill: {{ l.color }}"/>
+  {% endfor %}
+  {% for label in c.labels %}
+  <text class="tick" x="{{ label.x }}" y="{{ c.height - 6 }}" text-anchor="middle">{{ label.label }}</text>
+  {% endfor %}
+</svg>
+{% if c.multi %}
+<ul class="chart-legend">
+  {% for l in c.lines %}
+  <li><i style="background: {{ l.color }}"></i>{{ l.label }} <b>{{ l.value }}</b></li>
+  {% endfor %}
+</ul>
+{% endif %}
+{% endmacro %}
+
+{% macro os_commands(commands, nested=False) %}
+{# Every platform is rendered. site.js hides the non-matching ones and reveals
+   the switcher; with JS off the switcher stays hidden and all commands show,
+   so no visitor is ever left without an install line. #}
+<div class="os-switch" hidden data-os-switch>
+  {% for c in commands %}
+  <button type="button" class="os-tab" data-os-tab="{{ c.id }}">{{ c.os }}</button>
+  {% endfor %}
+</div>
+{% for c in commands %}
+<div class="os-cmd" data-os="{{ c.id }}">
+  <div class="install-os">{{ c.os }}</div>
+  {{ cmd(c.command, primary=(not nested)) }}
+</div>
+{% endfor %}
+{% endmacro %}
+
+{# ---------------------------------------------------------------- rows #}
+
+{# The row is a plugin-owned spec (models.RowSpec), not a fixed layout: what
+   belongs on the densest surface of the site differs per ecosystem. The core
+   renders the known variants so every consumer keeps one visual system;
+   `template` is the declared escape hatch for anything else.
+
+   Type is signalled by a *labelled* pill and a tinted code strip rather than
+   a bare colour bar — colour alone carries no meaning for anyone who cannot
+   distinguish the hues, and the strip already needed a background. #}
+{# The row is a container, not a link: the install command has to be a real
+   copy button, and interactive elements cannot nest inside an anchor. The
+   package name carries the link and stretches over the whole row via
+   `::after`, so clicking anywhere still navigates. #}
+{% macro package_row(pkg, root) %}
+{% set r = pkg.row %}
+<div class="row row--{{ r.variant }} tone-{{ r.tone }}"
+   data-slug="{{ pkg.slug }}"
+   data-search="{{ (pkg.display ~ ' ' ~ pkg.name ~ ' ' ~ pkg.namespace ~ ' ' ~ pkg.description) | lower }}"
+   {% for k, v in pkg.facets.items() %}data-facet-{{ k }}="{{ v }}" {% endfor %}>
+{% if r.variant == 'card' %}
+  {{ row_card(pkg, r, root) }}
+{% else %}
+  {{ row_code(pkg, r, root) }}
+{% endif %}
+</div>
+{% endmacro %}
+
+{% macro copy_inline(text, cls) %}
+<button class="{{ cls }} copy-inline" type="button" data-copy="{{ text }}"
+        title="{{ text }}" aria-label="Copy: {{ text }}">
+  <code>{{ text }}</code>
+  <svg viewBox="0 0 16 16" width="12" height="12" aria-hidden="true"><path fill="currentColor" d="M4 1.5H3a2 2 0 0 0-2 2V14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V3.5a2 2 0 0 0-2-2h-1v1h1a1 1 0 0 1 1 1V14a1 1 0 0 1-1 1H3a1 1 0 0 1-1-1V3.5a1 1 0 0 1 1-1h1z"/><path fill="currentColor" d="M9.5 1a.5.5 0 0 1 .5.5v1a.5.5 0 0 1-.5.5h-3a.5.5 0 0 1-.5-.5v-1a.5.5 0 0 1 .5-.5zm-3-1A1.5 1.5 0 0 0 5 1.5v1A1.5 1.5 0 0 0 6.5 4h3A1.5 1.5 0 0 0 11 2.5v-1A1.5 1.5 0 0 0 9.5 0z"/></svg>
+</button>
+{% endmacro %}
+
+{# `code` — three lines, one meaning each, identical for every package:
+     1. `// name version — description`   the comment that separates rows
+     2. `import x;` / `#include <x>`      how you consume it
+     3. `mcpp add x@1.0`  +  attributes   how you add it, click to copy
+   A row that sometimes put the install command on line 2 and sometimes on
+   line 3 forced the reader to re-parse every row. #}
+{% macro row_code(pkg, r, root) %}
+  <div class="row-comment">
+    <a class="row-name" href="{{ root }}packages/{{ pkg.slug }}/">{{ pkg.display }}</a>
+    {% if pkg.latest %}<span class="row-ver">{{ pkg.latest }}</span>{% endif %}
+    {% if pkg.description %}<span class="row-desc"> — {{ pkg.description }}</span>{% endif %}
+  </div>
+  {% if r.code %}
+  <div class="row-code{{ ' row-code-muted' if r.code_muted }}"
+       {% if r.code_muted %}title="{{ r.note }}"{% endif %}><code>{{ r.code }}</code></div>
+  {% endif %}
+  <div class="row-foot">
+    {% if r.install %}{{ copy_inline(r.install, 'row-install') }}{% endif %}
+    <span class="row-meta">
+      {% if pkg.licenses %}{{ pkg.licenses | join(', ') }}{% endif %}
+      {% if pkg.platforms %}<span class="dot"></span>{{ pkg.platforms | length }} {{ t('pkg.platforms') | lower }}{% endif %}
+      {% for badge in r.badges %}<span class="dot"></span>{{ badge }}{% endfor %}
+    </span>
+  </div>
+{% endmacro %}
+
+{# `card` — metadata on the header line, and one copyable install command in a
+   tinted strip. Suits an index of tools, where "what do I type to get it" is
+   the whole question. #}
+{% macro row_card(pkg, r, root) %}
+  <div class="row-top">
+    <a class="row-cname" href="{{ root }}packages/{{ pkg.slug }}/">
+      {%- set parts = pkg.identity.display_parts -%}
+      {%- if parts[0] %}<span class="ns">{{ parts[0] }}</span>{% endif -%}{{ parts[1] }}
+    </a>
+    {% if pkg.latest %}<span class="row-cver">{{ pkg.latest }}</span>{% endif %}
+    {% if r.lead %}<span class="row-lead">{{ r.lead }}</span>{% endif %}
+    <span class="row-cmeta">
+      {% if pkg.licenses %}<span>{{ pkg.licenses | join(', ') }}</span>{% endif %}
+      {% if pkg.platforms %}<span>{{ pkg.platforms | length }} {{ t('pkg.platforms') | lower }}</span>{% endif %}
+      {% for badge in r.badges %}<span>{{ badge }}</span>{% endfor %}
+    </span>
+  </div>
+  {% if pkg.description %}<p class="row-cdesc">{{ pkg.description }}</p>{% endif %}
+  {% if r.install %}
+  <div class="row-strip">
+    {{ copy_inline(r.install, 'row-cinstall') }}
+    {% if r.code %}<code class="row-sec">{{ r.code }}</code>{% endif %}
+  </div>
+  {% endif %}
+{% endmacro %}
+
+{# -------------------------------------------------------------- blocks #}
+
+{% macro block(b) %}
+<section class="blk blk-{{ b.kind }}{{ ' blk-fold' if b.collapsed }}" data-plugin="{{ b.plugin }}">
+  {% if b.collapsed %}
+  <details>
+    <summary><h3>{{ b.title }}</h3></summary>
+    <div class="blk-body">{{ block_body(b) }}</div>
+  </details>
+  {% else %}
+  {% if b.title %}<h3>{{ b.title }}</h3>{% endif %}
+  <div class="blk-body">{{ block_body(b) }}</div>
+  {% endif %}
+</section>
+{% endmacro %}
+
+{% macro block_body(b) %}
+  {%- if b.kind == 'kv' -%}
+    <dl class="kv">
+      {% for item in b.data.get('items', []) %}
+      <dt>{{ item.key }}</dt>
+      <dd>{% if item.get('mono') %}<code>{{ item.value }}</code>{% else %}{{ item.value }}{% endif %}</dd>
+      {% endfor %}
+    </dl>
+  {%- elif b.kind == 'code' -%}
+    {% if b.data.get('caption') %}<p class="blk-caption">{{ b.data.caption }}</p>{% endif %}
+    <div class="code-block">
+      <pre><code>{{ b.data.get('code', '') }}</code></pre>
+      {{ copy_button(b.data.get('code', '')) }}
+    </div>
+    {% if b.data.get('source') %}
+    <p class="blk-source">{{ b.data.source }}</p>
+    {% endif %}
+  {%- elif b.kind == 'table' -%}
+    <div class="table-wrap">
+      <table>
+        <thead><tr>{% for h in b.data.get('head', []) %}<th>{{ h }}</th>{% endfor %}</tr></thead>
+        <tbody>
+        {% for row in b.data.get('rows', []) %}
+          <tr>{% for cell in row %}<td>{{ cell }}</td>{% endfor %}</tr>
+        {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  {%- elif b.kind == 'list' -%}
+    <ul class="blk-list">
+      {% for item in b.data.get('items', []) %}<li><code>{{ item }}</code></li>{% endfor %}
+    </ul>
+  {%- elif b.kind == 'callout' -%}
+    <p class="callout">{{ b.data.get('text', '') }}</p>
+  {%- endif -%}
+{% endmacro %}
+
+{# --------------------------------------------------------------- people #}
+
+{% macro avatar(person, size=28) %}
+{% if person.avatar %}
+<img class="av" src="{{ person.avatar }}" width="{{ size }}" height="{{ size }}"
+     alt="" loading="lazy">
+{% else %}
+<span class="av av-blank" style="width:{{ size }}px;height:{{ size }}px"
+      aria-hidden="true">{{ (person.label or '?')[0] | upper }}</span>
+{% endif %}
+{% endmacro %}
+
+{% macro person_chip(person) %}
+<a class="chip-person" {% if person.url %}href="{{ person.url }}"{% endif %}>
+  {{ avatar(person, 22) }}<span>{{ person.label }}</span>
+</a>
+{% endmacro %}

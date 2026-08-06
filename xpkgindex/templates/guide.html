@@ -1,0 +1,43 @@
+{% extends "base.html" %}
+{% block title %}{{ guide.title }} · {{ config.title }}{% endblock %}
+{% block description %}{{ guide.title }} — contributor guide for {{ config.title }}.{% endblock %}
+
+{% block content %}
+<div class="guide">
+  <div class="guide-main">
+    <nav class="crumbs">
+      <a href="{{ root }}guides/{{ site.guides[0].slug }}/">{{ config.guides_nav_label or t('guide.guides') }}</a>
+      <span>/</span> {{ guide.title }}
+    </nav>
+    <h1 class="page-title">{{ guide.title }}</h1>
+    {# The guide body follows the site language when the index ships a
+       translation for it, and stays as authored when it does not. #}
+    <p class="muted small">{{ t('guide.rendered_from', path=guide.source) }}</p>
+    <article class="prose">
+      {{ body.html | safe }}
+    </article>
+  </div>
+
+  <aside class="guide-side">
+    <section>
+      <h4>{{ t('guide.guides') }}</h4>
+      <ul class="side-links">
+        {% for g in site.guides %}
+        <li><a href="{{ root }}guides/{{ g.slug }}/" class="{{ 'on' if g.slug == guide.slug }}">{{ g.title }}</a></li>
+        {% endfor %}
+      </ul>
+    </section>
+
+    {% if body.toc %}
+    <section>
+      <h4>{{ t('guide.on_this_page') }}</h4>
+      <ul class="toc">
+        {% for item in body.toc %}
+        <li class="toc-h{{ item.level }}"><a href="#{{ item.anchor }}">{{ item.title }}</a></li>
+        {% endfor %}
+      </ul>
+    </section>
+    {% endif %}
+  </aside>
+</div>
+{% endblock %}

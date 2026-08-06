@@ -178,3 +178,5 @@ cython_debug/
 *.DS_Store
 xim-pkgindex
 data.json
+# Visual brainstorming mockups (local only)
+.superpowers/

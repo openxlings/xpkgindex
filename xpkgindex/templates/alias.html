@@ -1,0 +1,27 @@
+{% extends "base.html" %}
+{% import "_macros.html" as m with context %}
+{% block title %}{{ short }} · {{ config.title }}{% endblock %}
+
+{% block content %}
+{% if target %}
+<meta http-equiv="refresh" content="0; url={{ root }}packages/{{ target.slug }}/">
+<link rel="canonical" href="{{ root }}packages/{{ target.slug }}/">
+<section class="blk">
+  <h3>{{ t('alias.moved') }}</h3>
+  <p>
+    {{ t('alias.moved_body', short=short) }}
+    <a href="{{ root }}packages/{{ target.slug }}/"><code>{{ target.display }}</code></a>.
+  </p>
+</section>
+{% else %}
+<section class="blk">
+  <h3>{{ t('alias.which', short=short) }}</h3>
+  <p class="blk-caption">{{ t('alias.ambiguous') }}</p>
+  <div class="rows">
+    {% for pkg in group %}
+    {{ m.package_row(pkg, root) }}
+    {% endfor %}
+  </div>
+</section>
+{% endif %}
+{% endblock %}
