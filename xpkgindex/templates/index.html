@@ -5,64 +5,74 @@
 
 {# ------------------------------------------------------ 1. hero #}
 <section class="hero">
-  <h1>{{ config.title }}</h1>
-  {% if config.description %}<p class="lede">{{ config.description }}</p>{% endif %}
+  <div class="hero-main">
+    <h1>{{ config.title }}</h1>
+    {% if config.description %}<p class="lede">{{ config.description }}</p>{% endif %}
 
-  <div class="stat-row">
-    <span><b>{{ stats.packages }}</b> {{ t('stat.packages') }}</span>
-    <span><b>{{ stats.namespaces }}</b> {{ t('stat.namespaces') }}</span>
-    <span><b>{{ stats.versions }}</b> {{ t('stat.versions') }}</span>
-    {% for extra in site.index_meta.get('hero_stats', []) %}
-    <span><b>{{ extra.value }}</b> {{ extra.label }}</span>
-    {% endfor %}
-  </div>
+    <div class="stat-row">
+      <span><b>{{ stats.packages }}</b> {{ t('stat.packages') }}</span>
+      <span><b>{{ stats.namespaces }}</b> {{ t('stat.namespaces') }}</span>
+      <span><b>{{ stats.versions }}</b> {{ t('stat.versions') }}</span>
+      {% for extra in site.index_meta.get('hero_stats', []) %}
+      <span><b>{{ extra.value }}</b> {{ extra.label }}</span>
+      {% endfor %}
+    </div>
 
-  {# Every platform's command is rendered; site.js reveals only the matching
-     one and turns the labels into a switcher, so a JS-less visitor still
-     sees them all. #}
-  {% if config.install or docs_home %}
-  <div class="hero-actions">
-  {% endif %}
-  {% if config.install %}
-  <div class="install">
-    {% if config.install.command %}
-    <div class="install-label">{{ config.install.label or t('home.install') }}</div>
-    {{ m.cmd(config.install.command, primary=True) }}
-    {% endif %}
+    {# Every platform's command is rendered; site.js reveals only the matching
+       one and turns the labels into a switcher, so a JS-less visitor still
+       sees them all. #}
+    {% if config.install %}
+    <div class="install">
+      {% if config.install.command %}
+      <div class="install-label">{{ config.install.label or t('home.install') }}</div>
+      {{ m.cmd(config.install.command, primary=True) }}
+      {% endif %}
 
-    {% if config.install.fallback %}
-    {% if config.install.command %}
-    <details class="install-more">
-      <summary>{{ config.install.summary or t('home.other_install') }}</summary>
-      <div class="install-more-body" data-os-group>
-        {{ m.os_commands(config.install.fallback, nested=True) }}
+      {% if config.install.fallback %}
+      {% if config.install.command %}
+      <details class="install-more">
+        <summary>{{ config.install.summary or t('home.other_install') }}</summary>
+        <div class="install-more-body" data-os-group>
+          {{ m.os_commands(config.install.fallback, nested=True) }}
+        </div>
+      </details>
+      {% else %}
+      {% if config.install.label %}<div class="install-label">{{ config.install.label }}</div>{% endif %}
+      <div data-os-group>
+        {{ m.os_commands(config.install.fallback, nested=False) }}
       </div>
-    </details>
-    {% else %}
-    {% if config.install.label %}<div class="install-label">{{ config.install.label }}</div>{% endif %}
-    <div data-os-group>
-      {{ m.os_commands(config.install.fallback, nested=False) }}
+      {% endif %}
+      {% endif %}
     </div>
     {% endif %}
-    {% endif %}
   </div>
-  {% endif %}
 
-  {# Beside the install command, not under it: the two together are "get it,
-     then learn it", and a newcomer should not have to find the docs in the
-     nav bar. #}
+  {# The card sits in the hero's empty right-hand side, centred against the
+     install block: "get it" on the left, "learn it" on the right. Its
+     contents come from the site config, so an index decides what a newcomer
+     should see first. #}
   {% if docs_home %}
-  <a class="cta" href="{{ root }}docs/{{ docs_home }}/">
-    <span class="cta-label">{{ config.docs_cta_label or t('home.quick_start') }}</span>
-    <svg class="cta-arrow" viewBox="0 0 16 16" width="16" height="16" aria-hidden="true">
-      <path fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"
-            stroke-linejoin="round" d="M3 8h9M8.5 4.5 12 8l-3.5 3.5"/>
-    </svg>
-  </a>
-  {% endif %}
-
-  {% if config.install or docs_home %}
-  </div>
+  {% set cta = config.docs_cta %}
+  <aside class="hero-aside">
+    <a class="cta-card" href="{{ root }}docs/{{ docs_home }}/" data-tilt>
+      <span class="cta-glow" aria-hidden="true"></span>
+      {% if cta.get('eyebrow') %}<span class="cta-eyebrow">{{ cta.eyebrow }}</span>{% endif %}
+      <span class="cta-title">{{ cta.get('title') or config.docs_cta_label or t('home.quick_start') }}</span>
+      {% if cta.get('description') %}<span class="cta-desc">{{ cta.description }}</span>{% endif %}
+      {% if cta.get('lines') %}
+      <span class="cta-lines">
+        {% for line in cta.lines %}<code>{{ line }}</code>{% endfor %}
+      </span>
+      {% endif %}
+      <span class="cta-action">
+        {{ cta.get('action') or t('home.quick_start') }}
+        <svg class="cta-arrow" viewBox="0 0 16 16" width="15" height="15" aria-hidden="true">
+          <path fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"
+                stroke-linejoin="round" d="M3 8h9M8.5 4.5 12 8l-3.5 3.5"/>
+        </svg>
+      </span>
+    </a>
+  </aside>
   {% endif %}
 </section>
 

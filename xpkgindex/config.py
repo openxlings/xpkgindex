@@ -102,6 +102,9 @@ class SiteConfig:
     # it also becomes the homepage call to action and the Docs nav target.
     docs_landing: str = ""
     docs_cta_label: str = ""
+    # Free-form card contents: eyebrow / title / description / lines / action.
+    # All optional; the card falls back to a single "Quick start" label.
+    docs_cta: Dict[str, Any] = field(default_factory=dict)
     ecosystem_owners: List[str] = field(default_factory=list)
     ecosystem_repos: List[str] = field(default_factory=list)
     identities_path: str = ".xpkgindex/identities.json"
@@ -227,6 +230,7 @@ def load_config(directory: str, config_path: Optional[str] = None) -> SiteConfig
     docs_cfg = data.get("docs") or data.get("guides") or {}
     cfg.docs_landing = docs_cfg.get("landing", "")
     cfg.docs_cta_label = docs_cfg.get("cta_label", "")
+    cfg.docs_cta = docs_cfg.get("cta") or {}
 
     eco = data.get("ecosystem", {}) or {}
     cfg.ecosystem_owners = eco.get("owners", []) or []

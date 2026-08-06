@@ -97,6 +97,38 @@
     select(chosen);
   });
 
+  // ------------------------------------------------------------ cta tilt
+  // Gravity-style hover: the card leans toward the pointer and a highlight
+  // follows it. Pure decoration — the card is a plain link without JS, and
+  // the effect is skipped for anyone who asked for reduced motion.
+  var reduceMotion = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  document.querySelectorAll('[data-tilt]').forEach(function (card) {
+    if (reduceMotion) return;
+    var frame = null;
+
+    function apply(ev) {
+      if (frame) return;
+      frame = requestAnimationFrame(function () {
+        frame = null;
+        var r = card.getBoundingClientRect();
+        var px = (ev.clientX - r.left) / r.width;
+        var py = (ev.clientY - r.top) / r.height;
+        var max = 7;                                  // degrees
+        card.style.transform =
+          'perspective(700px) rotateX(' + ((0.5 - py) * max).toFixed(2) + 'deg)' +
+          ' rotateY(' + ((px - 0.5) * max).toFixed(2) + 'deg) translateY(-3px)';
+        card.style.setProperty('--px', (px * 100).toFixed(1) + '%');
+        card.style.setProperty('--py', (py * 100).toFixed(1) + '%');
+      });
+    }
+
+    card.addEventListener('pointermove', apply);
+    card.addEventListener('pointerleave', function () {
+      if (frame) { cancelAnimationFrame(frame); frame = null; }
+      card.style.transform = '';
+    });
+  });
+
   // ---------------------------------------------------------------- docs
   // Copy buttons on rendered markdown code blocks. Added here rather than in
   // the renderer so the docs stay plain markdown that also reads correctly
