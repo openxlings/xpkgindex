@@ -22,7 +22,7 @@
   --ink-4: #9aa5b1;
 
   /* Overridden per site in theme.css. */
-  --theme-fade: 3s;
+  --theme-fade: 2s;
   --theme-fade-ease: cubic-bezier(.45, .05, .25, 1);
 
   --tone-accent: #5b46d6;
@@ -126,6 +126,11 @@ h1, h2, h3, h4 { line-height: 1.25; letter-spacing: -.01em; }
 /* No `overflow` here: an overflow ancestor clips absolutely positioned
    descendants, which silently swallowed the Docs dropdown. Horizontal
    scrolling is only needed on narrow screens, where the nav wraps anyway. */
+/* Both wrappers vanish from the layout on wide screens, so the nav and the
+   controls remain ordinary flex items of the header — the desktop header is
+   built by the absence of these rules, not by overriding them. */
+.nav-wrap, .nav-panel { display: contents; }
+button.nav-trigger { display: none; }
 .nav { display: flex; gap: 4px; flex: 1; min-width: 0; align-items: center; }
 .nav a {
   color: var(--ink-2); padding: 5px 9px; border-radius: var(--radius-sm);
@@ -307,7 +312,7 @@ main.wrap {
   .cta-card { transform: none !important; }
 }
 @media (max-width: 900px) {
-  .hero { grid-template-columns: 1fr; gap: 22px; }
+  .hero { grid-template-columns: minmax(0, 1fr); gap: 22px; }
   .cta-card { width: 100%; }
 }
 .install-label {
@@ -319,7 +324,14 @@ main.wrap {
   background: var(--bg-code); border: 1px solid var(--line);
   border-radius: var(--radius-sm); padding: 8px 10px; margin-bottom: 6px;
 }
-.cmd code { color: var(--ink); overflow-x: auto; white-space: pre; }
+/* A command is one line at every width. Truncating with an ellipsis beats
+   wrapping (a two-line command reads as two commands) and beats a scrollbar
+   (you cannot see there is more). The copy button always copies the whole
+   thing, and the full text is in the element's title. */
+.cmd code {
+  color: var(--ink); min-width: 0; flex: 1 1 auto;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
 .cmd-primary { border-color: color-mix(in srgb, var(--tone-accent) 35%, var(--line)); }
 .cmd-primary code { color: var(--tone-accent); font-weight: 600; }
 .copy {
@@ -360,7 +372,7 @@ main.wrap {
 /* --------------------------------------------------------- pulse band */
 
 .pulse { border-top: 1px solid var(--line-soft); border-bottom: 1px solid var(--line-soft); padding: 18px 0; margin-bottom: 22px; }
-.pulse-grid { display: grid; grid-template-columns: 1.15fr 1fr; gap: 22px; }
+.pulse-grid { display: grid; grid-template-columns: minmax(0, 1.15fr) minmax(0, 1fr); gap: 22px; }
 .pulse-card h2, .blk h3 {
   margin: 0 0 8px; font-size: 10.5px; letter-spacing: .08em; text-transform: uppercase;
   color: var(--ink-3); font-weight: 600;
@@ -425,7 +437,13 @@ main.wrap {
 /* -------------------------------------------------------------- facets */
 
 .facets { display: grid; gap: 7px; margin-bottom: 16px; }
-.facet-group { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
+/* `min-width: 0` is load-bearing: a grid item defaults to `min-width: auto`,
+   so a row of chips wider than the screen refuses to shrink and stretches the
+   whole document — the page scrolled sideways by 726px on a phone before this
+   line existed. It is what lets the scrolled strip below actually scroll. */
+.facet-group {
+  display: flex; flex-wrap: wrap; gap: 6px; align-items: center; min-width: 0;
+}
 .facet-axis {
   font-size: 10px; letter-spacing: .08em; text-transform: uppercase;
   color: var(--ink-4); width: 96px; flex: none; text-align: right; padding-right: 4px;
@@ -463,7 +481,12 @@ main.wrap {
 .tone-header { --row-tone: var(--tone-header); }
 .tone-tool   { --row-tone: var(--tone-tool); }
 
-.rows { display: grid; gap: 8px; }
+/* `minmax(0, 1fr)` rather than the implicit column: an auto-sized grid column
+   is as wide as its widest item's min-content, and a row whose lines no longer
+   wrap has a min-content width of the longest command in the index. The column
+   has to be allowed to be narrower than its contents for the ellipsis to ever
+   engage. */
+.rows { display: grid; grid-template-columns: minmax(0, 1fr); gap: 8px; }
 .row {
   display: block; padding: 9px 12px; color: inherit; position: relative;
   background: var(--bg-code); border: 1px solid var(--line);
@@ -485,7 +508,11 @@ main.wrap {
   background: none; border: 0; border-radius: 4px; padding: 1px 5px;
   color: var(--ink-3); text-align: left;
 }
-.copy-inline code { font-family: var(--font-mono); }
+.copy-inline { max-width: 100%; min-width: 0; }
+.copy-inline code {
+  font-family: var(--font-mono); min-width: 0;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
 .copy-inline svg { opacity: 0; flex: none; transition: opacity .12s; }
 .copy-inline:hover { background: var(--bg-sunken); color: var(--ink); }
 .copy-inline:hover svg, .copy-inline:focus-visible svg { opacity: .7; }
@@ -495,27 +522,37 @@ main.wrap {
 /* ---- variant: code (default) ------------------------------------------
    No left colour bar: the type already shows in the colour of the code
    line, and a bare stripe carries no meaning on its own. */
-.row-comment { font-family: var(--font-mono); font-size: 11.5px; color: var(--ink-4); }
+/* Three lines, and three lines only: name, how you consume it, how you add
+   it. Each truncates rather than wrapping — a row that becomes four lines on
+   a phone breaks the scan pattern the whole listing is built on. */
+.row-comment {
+  font-family: var(--font-mono); font-size: 11.5px; color: var(--ink-4);
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
 .row-comment::before { content: "// "; }
 .row-name { color: var(--ink-3); font-weight: 600; }
 .row-ver { color: var(--ink-4); margin-left: 5px; }
 .row-desc { color: var(--ink-4); }
 .row-code {
   font-family: var(--font-mono); font-size: 13.5px; margin-top: 2px;
-  color: var(--row-tone);
+  color: var(--row-tone); min-width: 0;
 }
-.row-code code { white-space: pre-wrap; word-break: break-word; }
+.row-code code { display: block; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .tone-neutral .row-code { color: var(--ink); }
 /* A placeholder consumption line — the descriptor does not name the header
    or module, so the shape is shown without inventing an identifier. */
 .row-code-muted { color: var(--ink-4); font-style: normal; opacity: .75; }
 .row-foot {
-  display: flex; justify-content: space-between; align-items: center; gap: 12px;
-  flex-wrap: wrap; margin-top: 6px; padding-top: 5px;
+  display: flex; justify-content: space-between; align-items: center; gap: 10px;
+  flex-wrap: nowrap; margin-top: 6px; padding-top: 5px;
   border-top: 1px dashed var(--line-soft); font-size: 11px; color: var(--ink-4);
 }
-.row-install { font-size: 11px; }
-.row-meta { display: flex; align-items: center; gap: 6px; }
+.row-install { font-size: 11px; flex: 0 1 auto; min-width: 0; }
+/* The command keeps its width; the attributes give theirs up first. */
+.row-meta {
+  display: flex; align-items: center; gap: 6px; flex: 0 1 auto;
+  min-width: 0; overflow: hidden; white-space: nowrap;
+}
 .dot { width: 3px; height: 3px; border-radius: 50%; background: currentColor; opacity: .5; display: inline-block; }
 
 /* ---- variant: card ----------------------------------------------------
@@ -526,8 +563,11 @@ main.wrap {
   border-color: color-mix(in srgb, var(--row-tone) 45%, var(--line));
   background: var(--bg-raised); box-shadow: 0 2px 10px rgba(16, 24, 40, .06);
 }
-.row-top { display: flex; align-items: baseline; gap: 9px; flex-wrap: wrap; }
-.row-cname { font-family: var(--font-mono); font-size: 14px; font-weight: 600; color: var(--ink); }
+.row-top { display: flex; align-items: baseline; gap: 9px; flex-wrap: nowrap; min-width: 0; }
+.row-cname {
+  font-family: var(--font-mono); font-size: 14px; font-weight: 600; color: var(--ink);
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-width: 0;
+}
 .row-cname .ns { color: var(--ink-4); font-weight: 400; }
 .row-cver { font-family: var(--font-mono); font-size: 11.5px; color: var(--ink-4); }
 .row-lead {
@@ -563,6 +603,10 @@ main.wrap {
 .crumbs { font-size: 12px; color: var(--ink-4); margin-bottom: 12px; }
 .crumbs span { margin: 0 5px; }
 
+/* `minmax(0, 1fr)` everywhere a column holds content that does not wrap:
+   plain `1fr` means `minmax(auto, 1fr)`, whose floor is the item's min-content
+   width, so one long command in a code block widens the column past the
+   viewport and the whole page scrolls sideways. */
 .detail { display: grid; grid-template-columns: minmax(0, 1fr) 260px; gap: 34px; align-items: start; }
 .pkg-head { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
 .pkg-name { margin: 0; font-family: var(--font-mono); font-size: 25px; font-weight: 650; }
@@ -592,7 +636,7 @@ main.wrap {
 .blk-source { color: var(--ink-4); font-size: 11.5px; margin: 5px 0 0; }
 
 .kv, .side-kv { display: grid; margin: 0; }
-.kv { grid-template-columns: max-content 1fr; gap: 4px 18px; }
+.kv { grid-template-columns: max-content minmax(0, 1fr); gap: 4px 18px; }
 .kv dt, .side-kv dt { color: var(--ink-3); font-size: 12.5px; }
 .kv dd, .side-kv dd { margin: 0; color: var(--ink); font-size: 12.5px; min-width: 0; overflow-wrap: anywhere; }
 .side-kv dt { margin-top: 8px; font-size: 10.5px; letter-spacing: .06em; text-transform: uppercase; }
@@ -665,7 +709,7 @@ tr:last-child td { border-bottom: 0; }
 .avatar-wall { display: flex; flex-wrap: wrap; gap: 5px; }
 
 .bars { display: grid; gap: 5px; }
-.bar-row { display: grid; grid-template-columns: 150px 1fr 40px; align-items: center; gap: 10px; font-size: 12px; }
+.bar-row { display: grid; grid-template-columns: 150px minmax(0, 1fr) 40px; align-items: center; gap: 10px; font-size: 12px; }
 .bar { background: var(--bg-sunken); border-radius: 3px; height: 10px; overflow: hidden; }
 .bar-fill { display: block; height: 100%; background: var(--tone-accent); opacity: .75; }
 .bar-n { color: var(--ink-3); text-align: right; font-family: var(--font-mono); font-size: 11.5px; }
@@ -705,41 +749,224 @@ tr:last-child td { border-bottom: 0; }
 
 /* ------------------------------------------------------- narrow view */
 
+/* ------------------------------------------------------------- responsive
+
+   Three rules survive every width, because they are what the listing is for:
+   the nav is one line, each facet axis is one line, and a command is one
+   line. Everything that cannot fit scrolls sideways within its own strip or
+   truncates with an ellipsis — nothing wraps into a second line and quietly
+   changes what a row means. */
+
+/* Scrolled strips: sideways, without a scrollbar eating a row of pixels. */
+.nav, .facet-group { scrollbar-width: none; -ms-overflow-style: none; }
+.nav::-webkit-scrollbar, .facet-group::-webkit-scrollbar { height: 0; width: 0; }
+
+@media (max-width: 1100px) {
+  .hero { grid-template-columns: minmax(0, 1fr) minmax(250px, .38fr); gap: 24px; }
+  .detail { grid-template-columns: minmax(0, 1fr) 220px; gap: 26px; }
+  .guide { grid-template-columns: minmax(0, 1fr) 200px; gap: 26px; }
+}
+
 @media (max-width: 900px) {
-  .detail, .guide { grid-template-columns: 1fr; }
+  .hero { grid-template-columns: 1fr; gap: 22px; }
+  .cta-card { width: 100%; }
+  .detail, .guide { grid-template-columns: minmax(0, 1fr); }
   .detail-side, .guide-side { position: static; }
-  .pulse-grid { grid-template-columns: 1fr; }
-  .nav { order: 3; width: 100%; overflow-x: auto; }
+  .pulse-grid { grid-template-columns: minmax(0, 1fr); }
   .topbar-inner { height: auto; flex-wrap: wrap; padding-top: 8px; padding-bottom: 8px; }
+  .nav { order: 3; flex: 1 0 100%; }
   .search input { width: 150px; }
-  .bar-row { grid-template-columns: 110px 1fr 34px; }
+
+  /* One line per axis from here down. Wrapping turns three tidy axes into a
+     block of chips with no reading order — which is exactly what a tablet
+     showed before. Swiping sideways is the natural gesture at these widths;
+     above 900 there is room to wrap and a mouse to wrap it with. */
+  .facet-group { flex-wrap: nowrap; overflow-x: auto; gap: 5px; padding: 2px 0; }
+  .facet { flex: none; }
+  .bar-row { grid-template-columns: 110px minmax(0, 1fr) 34px; }
+}
+
+/* Phone. The header becomes two rows — identity and controls, then the nav —
+   which needs the right-hand group to stop being one box: `display: contents`
+   promotes search, links, language and theme into the header's own flex row
+   so they can be ordered individually. */
+@media (max-width: 700px) {
+  .wrap { padding: 0 14px; }
+  .topbar-inner { gap: 8px; padding-top: 7px; padding-bottom: 7px; height: auto; }
+  .topbar-right { display: contents; }
+  /* Pushes the controls to the right edge, so the menu panel hangs from it. */
+  .brand { order: 1; font-size: 16px; margin-right: auto; }
+  /* One header row: the wordmark and a button. Search, the nav, the link
+     icons, the language switcher and the theme toggle all live in the panel
+     the button opens — a phone header should cost one row, not three, and it
+     is sticky, so whatever it costs it costs for the whole visit.
+
+     The panel opens on focus-within: a tap focuses the button, and tapping
+     away closes it. No JavaScript, and the same behaviour as the language
+     and documents menus. */
+  .nav-wrap { display: block; position: relative; order: 2; }
+  button.nav-trigger { display: inline-flex; align-items: center; }
+  .nav-wrap:focus-within .nav-trigger { color: var(--tone-accent); background: var(--bg-sunken); }
+
+  /* A wrapping row, not a column: the search and the nav each claim a full
+     line, and the three small controls settle onto one line together at the
+     bottom. `.topbar-right` steps out of the way so its children can be
+     ordered individually. */
+  .nav-panel {
+    display: flex; flex-wrap: wrap; align-items: center; gap: 9px 6px;
+    position: absolute; top: calc(100% + 9px); right: 0; z-index: 30;
+    width: min(330px, calc(100vw - 24px));
+    padding: 9px; border: 1px solid var(--line); border-radius: var(--radius);
+    background: var(--bg-raised); box-shadow: 0 10px 30px rgba(16, 24, 40, .16);
+    opacity: 0; visibility: hidden; transform: translateY(-5px);
+    transition: opacity .13s ease, transform .13s ease, visibility .13s;
+  }
+  .nav-wrap:focus-within .nav-panel, .nav-wrap:hover .nav-panel {
+    opacity: 1; visibility: visible; transform: none;
+  }
+
+  .topbar-right { display: contents; }
+  .nav-panel .search { flex: 1 0 100%; order: 1; }
+  .nav-panel .search input { width: 100%; font-size: 14px; padding: 7px 10px; }
+  .nav {
+    flex: 1 0 100%; order: 2; flex-direction: column; align-items: stretch; gap: 1px;
+    padding-bottom: 8px; border-bottom: 1px solid var(--line-soft);
+  }
+  .icon-links { order: 3; gap: 2px; }
+  .lang { order: 4; }
+  .theme-toggle { order: 5; }
+  .nav a { font-size: 13.5px; padding: 7px 9px; }
+  .nav-item { display: block; }
+  .nav-item > a { display: block; }
+  /* The documents are listed inline, indented: a menu inside a menu has no
+     gesture on a touch screen. */
+  .nav-menu {
+    position: static; opacity: 1; visibility: visible; transform: none;
+    display: block; min-width: 0; padding: 0 0 2px; margin: 0;
+    border: 0; background: none; box-shadow: none;
+  }
+  .nav-menu a { display: block; font-size: 12.5px; padding: 5px 9px 5px 21px; color: var(--ink-3); }
+  .nav-caret { display: none; }
+
+  .lang-menu { right: auto; left: 0; }
+
+  /* The axis label is pinned, so you always know which axis you are
+     swiping through. */
+  .facets { gap: 2px; }
+  .facet-axis {
+    width: auto; text-align: left; padding: 0 4px 0 0; position: sticky; left: 0;
+    background: linear-gradient(90deg, var(--bg) 78%, transparent);
+    z-index: 1; align-self: center;
+  }
+  .facet { flex: none; max-width: 52vw; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+  .hero { padding-bottom: 18px; }
+  .hero h1 { font-size: 22px; }
+  .stat-row { gap: 14px; margin-top: 12px; }
+  .stat-row b { font-size: 17px; }
+  .cta-card { padding: 16px 16px 14px; }
+  .row { padding: 8px 10px; }
+  .row-code { font-size: 12.5px; }
+  .row--card { padding: 10px 12px 11px; }
+  .contrib-strip { flex-wrap: wrap; gap: 8px; }
+  .bar-row { grid-template-columns: 92px minmax(0, 1fr) 30px; gap: 8px; }
+  .timeline li { font-size: 12px; }
+}
+
+/* Small phone: give the command the room, drop what the detail page repeats. */
+@media (max-width: 460px) {
+  .brand { font-size: 15px; }
+  .row-meta, .row-cmeta { display: none; }
+  .row-cdesc { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .hero h1 { font-size: 20px; }
+  .stat-row { gap: 12px; font-size: 12px; }
+  .kv { grid-template-columns: minmax(0, 1fr); gap: 1px 0; }
+  .kv dt { margin-top: 7px; }
+  .pkg-title { font-size: 20px; }
 }
 
 /* Day/night cross-fade.
-   The transition is attached only while the theme is actually changing —
-   `.theme-anim` goes on <html> for the duration and comes straight off. A
-   permanent transition on these properties would put a three-second lag on
-   every hover state on the page, which is the opposite of the intent.
 
-   Colour properties only: no transform, no opacity, nothing that moves. The
-   page is not animating, the light is. */
-:root.theme-anim,
-:root.theme-anim *,
-:root.theme-anim *::before,
-:root.theme-anim *::after {
+   The colour tokens themselves are animated, which is why they are registered
+   here: an unregistered custom property flips from one value to the next with
+   no interpolation, a registered `<color>` one is animatable. Everything on
+   the page reads these through `var()`, so eighteen transitions on <html>
+   re-light the entire document.
+
+   This is the fallback path. Recolouring by token still costs a full style
+   recalculation of the document every frame — measured at 20fps on a listing
+   of 155 packages — so where the browser supports view transitions site.js
+   uses those instead and this never runs. It is still far cheaper than what
+   it replaced (`transition` on `*`, which put seven animations on every
+   element and pseudo-element and stuttered worse).
+
+   Attached only while switching (`.theme-anim`, added by site.js for the
+   duration): a permanent transition here would fade the page in from the
+   wrong theme on first paint, since the head script picks the theme before
+   the stylesheet has finished loading. */
+@property --bg { syntax: "<color>"; inherits: true; initial-value: #ffffff; }
+@property --bg-sunken { syntax: "<color>"; inherits: true; initial-value: #f7f8fa; }
+@property --bg-raised { syntax: "<color>"; inherits: true; initial-value: #ffffff; }
+@property --bg-code { syntax: "<color>"; inherits: true; initial-value: #fbfcfd; }
+@property --line { syntax: "<color>"; inherits: true; initial-value: #e4e8ed; }
+@property --line-soft { syntax: "<color>"; inherits: true; initial-value: #eef1f5; }
+@property --ink { syntax: "<color>"; inherits: true; initial-value: #1c2530; }
+@property --ink-2 { syntax: "<color>"; inherits: true; initial-value: #4a5764; }
+@property --ink-3 { syntax: "<color>"; inherits: true; initial-value: #78848f; }
+@property --ink-4 { syntax: "<color>"; inherits: true; initial-value: #9aa5b1; }
+@property --tone-accent { syntax: "<color>"; inherits: true; initial-value: #5b46d6; }
+@property --tone-module { syntax: "<color>"; inherits: true; initial-value: #5b46d6; }
+@property --tone-header { syntax: "<color>"; inherits: true; initial-value: #52606d; }
+@property --tone-tool { syntax: "<color>"; inherits: true; initial-value: #b8690f; }
+@property --tone-neutral { syntax: "<color>"; inherits: true; initial-value: #7b8794; }
+@property --series-1 { syntax: "<color>"; inherits: true; initial-value: #0e9f6e; }
+@property --series-2 { syntax: "<color>"; inherits: true; initial-value: #c2410c; }
+@property --series-3 { syntax: "<color>"; inherits: true; initial-value: #7c3aed; }
+
+:root.theme-anim {
   transition:
-    background-color var(--theme-fade) var(--theme-fade-ease),
-    background-image var(--theme-fade) var(--theme-fade-ease),
-    border-color var(--theme-fade) var(--theme-fade-ease),
-    color var(--theme-fade) var(--theme-fade-ease),
-    fill var(--theme-fade) var(--theme-fade-ease),
-    stroke var(--theme-fade) var(--theme-fade-ease),
-    box-shadow var(--theme-fade) var(--theme-fade-ease) !important;
+    --bg var(--theme-fade) var(--theme-fade-ease),
+    --bg-sunken var(--theme-fade) var(--theme-fade-ease),
+    --bg-raised var(--theme-fade) var(--theme-fade-ease),
+    --bg-code var(--theme-fade) var(--theme-fade-ease),
+    --line var(--theme-fade) var(--theme-fade-ease),
+    --line-soft var(--theme-fade) var(--theme-fade-ease),
+    --ink var(--theme-fade) var(--theme-fade-ease),
+    --ink-2 var(--theme-fade) var(--theme-fade-ease),
+    --ink-3 var(--theme-fade) var(--theme-fade-ease),
+    --ink-4 var(--theme-fade) var(--theme-fade-ease),
+    --tone-accent var(--theme-fade) var(--theme-fade-ease),
+    --tone-module var(--theme-fade) var(--theme-fade-ease),
+    --tone-header var(--theme-fade) var(--theme-fade-ease),
+    --tone-tool var(--theme-fade) var(--theme-fade-ease),
+    --tone-neutral var(--theme-fade) var(--theme-fade-ease),
+    --series-1 var(--theme-fade) var(--theme-fade-ease),
+    --series-2 var(--theme-fade) var(--theme-fade-ease),
+    --series-3 var(--theme-fade) var(--theme-fade-ease);
 }
 
 @media (prefers-reduced-motion: reduce) {
-  :root.theme-anim,
-  :root.theme-anim *,
-  :root.theme-anim *::before,
-  :root.theme-anim *::after { transition: none !important; }
+  :root.theme-anim { transition: none; }
 }
+
+/* The smooth path: the browser snapshots the page before and after the theme
+   flips and cross-fades the two on the compositor, so the cost no longer
+   depends on how many elements are on the page — measured at a flat 60fps
+   where recolouring by token managed 20.
+
+   Only the new snapshot animates, over a static old one: the default
+   cross-fade animates both, and two half-transparent copies of the same page
+   briefly show through each other.
+
+   Duration and easing come from the same tokens as everything else, so an
+   index still sets the feel in .xpkgindex.json. */
+::view-transition-group(root) {
+  animation-duration: var(--theme-fade);
+  animation-timing-function: var(--theme-fade-ease);
+}
+::view-transition-old(root) { animation: none; }
+::view-transition-new(root) {
+  animation: xpi-theme-in var(--theme-fade) var(--theme-fade-ease) both;
+  mix-blend-mode: normal;
+}
+@keyframes xpi-theme-in { from { opacity: 0; } to { opacity: 1; } }

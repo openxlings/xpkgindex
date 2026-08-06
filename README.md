@@ -98,7 +98,7 @@ whole design system from `.xpkgindex.json` — no fork, no CSS edit.
     "style":  "auto",                       // auto | light | dark
     "tones":  { "module": "…", "header": "…", "tool": "…" },
     "dark":   { "accent": "#9b8bfa", "tones": {} },
-    "transition": { "duration": "3s",       // day/night cross-fade; "0s" to switch instantly
+    "transition": { "duration": "2s",       // day/night cross-fade; "0s" to switch instantly
                     "easing": "cubic-bezier(.45, .05, .25, 1)" }
   },
 

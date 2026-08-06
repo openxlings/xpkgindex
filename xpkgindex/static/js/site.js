@@ -19,21 +19,49 @@
   }
 
   var fadeTimer = null;
+
+  function flip(next) {
+    root.dataset.theme = next;
+    try { localStorage.setItem('xpi-theme', next); } catch (e) { /* private mode */ }
+  }
+
+  // While a view transition runs, the page on screen is a snapshot: it does
+  // not scroll and does not respond. That is fine for someone watching the
+  // light change and wrong for someone who has moved on, so the first sign of
+  // either ends the fade immediately.
+  function endOnInteraction(transition) {
+    var events = ['pointerdown', 'keydown', 'wheel', 'touchstart', 'scroll'];
+    function skip() { transition.skipTransition(); }
+    events.forEach(function (name) {
+      window.addEventListener(name, skip, { passive: true });
+    });
+    transition.finished.catch(function () {}).then(function () {
+      events.forEach(function (name) { window.removeEventListener(name, skip); });
+    });
+  }
+
   if (toggle) {
     toggle.addEventListener('click', function () {
       var next = root.dataset.theme === 'dark' ? 'light' : 'dark';
       var ms = fadeMs();
-      if (ms > 0) {
-        root.classList.add('theme-anim');
-        clearTimeout(fadeTimer);
-        // A second click mid-fade restarts the timer rather than stranding
-        // the class on the page.
-        fadeTimer = setTimeout(function () {
-          root.classList.remove('theme-anim');
-        }, ms + 60);
+      var still = window.matchMedia &&
+                  window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+      if (!ms || still) { flip(next); return; }
+
+      if (document.startViewTransition) {
+        endOnInteraction(document.startViewTransition(function () { flip(next); }));
+        return;
       }
-      root.dataset.theme = next;
-      try { localStorage.setItem('xpi-theme', next); } catch (e) { /* private mode */ }
+
+      // No view transitions here: interpolate the colour tokens instead.
+      // Attached only for the duration, so hover states stay immediate.
+      root.classList.add('theme-anim');
+      clearTimeout(fadeTimer);
+      fadeTimer = setTimeout(function () {
+        root.classList.remove('theme-anim');
+      }, ms + 60);
+      flip(next);
     });
   }
 

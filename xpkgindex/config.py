@@ -90,7 +90,7 @@ class SiteConfig:
     # reads as a deliberate change of light. An index that wants it snappy
     # sets `theme.transition.duration` to something short — or "0s" to switch
     # instantly, which is also what a visitor with reduced-motion always gets.
-    theme_fade: str = "3s"
+    theme_fade: str = "2s"
     theme_ease: str = "cubic-bezier(.45, .05, .25, 1)"
     density: str = "comfortable"
 

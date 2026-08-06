@@ -66,7 +66,22 @@
 <header class="topbar">
   <div class="wrap topbar-inner">
     <a class="brand" href="{{ root }}">{{ config.logo | loc }}</a>
-    <nav class="nav">
+
+    {# On a phone the nav collapses into this button's panel. The wrapper is
+       `display: contents` on wider screens, so the nav stays an ordinary flex
+       item of the header and nothing about the desktop layout changes. #}
+    <div class="nav-wrap">
+      <button class="icon-btn nav-trigger" type="button" aria-haspopup="true"
+              aria-label="{{ t('nav.menu') }}" title="{{ t('nav.menu') }}">
+        <svg viewBox="0 0 16 16" width="16" height="16" aria-hidden="true">
+          <path fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"
+                d="M2 4h12M2 8h12M2 12h12"/>
+        </svg>
+      </button>
+      {# On a phone this whole group is the panel; on wider screens it is
+         `display: contents` and its children lay out in the header itself. #}
+      <div class="nav-panel">
+      <nav class="nav">
       <a href="{{ root }}" class="{{ 'on' if page in ('home', 'packages') }}">{{ t('nav.packages') }}</a>
       <a href="{{ root }}stats/" class="{{ 'on' if page == 'stats' }}">{{ t('nav.stats') }}</a>
       <a href="{{ root }}contributors/" class="{{ 'on' if page == 'contributors' }}">{{ t('nav.contributors') }}</a>
@@ -97,9 +112,9 @@
       {# About keeps its own nav slot as well as its entry under Docs: it is
          where people look for "what is this index", not a document. #}
       <a href="{{ root }}about/" class="{{ 'on' if page == 'about' }}">{{ t('nav.about') }}</a>
-    </nav>
+      </nav>
 
-    <div class="topbar-right">
+      <div class="topbar-right">
       {# Suggestions come from search-index.json and Enter opens the best
          match. The old form posted to the homepage, which meant searching
          from a package page threw away the page you were on. #}
@@ -160,6 +175,8 @@
       <button class="icon-btn theme-toggle" type="button" aria-label="{{ t('nav.theme') }}" title="{{ t('nav.theme') }}">
         <svg viewBox="0 0 16 16" width="15" height="15" aria-hidden="true"><path fill="currentColor" d="M8 11a3 3 0 1 1 0-6 3 3 0 0 1 0 6zm0 1.5A4.5 4.5 0 1 0 8 3.5a4.5 4.5 0 0 0 0 9zM8 0h.01v2H8V0zm0 14h.01v2H8v-2zM0 8v.01h2V8H0zm14 0v.01h2V8h-2zM2.34 2.34l1.41 1.41-.7.7-1.42-1.4.71-.71zm9.91 9.91 1.41 1.41-.7.71-1.42-1.41.71-.71zm1.41-9.91.71.71-1.41 1.41-.71-.7 1.41-1.42zM3.05 12.25l.7.71-1.4 1.41-.71-.7 1.41-1.42z"/></svg>
       </button>
+      </div>
+      </div>
     </div>
   </div>
 </header>
