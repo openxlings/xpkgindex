@@ -1,5 +1,7 @@
 # xpkgindex
 
+**English** | [简体中文](README.zh.md)
+
 A static site framework for package indexes. The core knows what a *package
 index* is — identities, versions, platforms, mirrors, history, contributors —
 and nothing about any particular package manager. Everything ecosystem-specific
@@ -15,6 +17,12 @@ The output is a plain directory of HTML and JSON. It deploys to GitHub Pages
 as-is, and the JSON is shaped like an API response so a server can take over
 later without changing a single URL.
 
+Full documentation is in [`docs/`](docs/README.md): [getting
+started](docs/getting-started.md), [configuration](docs/configuration.md),
+[plugins](docs/plugins.md), [theming](docs/theming.md),
+[internationalisation](docs/i18n.md), [data and API](docs/data-and-api.md),
+[architecture](docs/architecture.md), [deployment](docs/deployment.md).
+
 ---
 
 ## What it produces
@@ -26,7 +34,7 @@ later without changing a single URL.
 | `/packages/<id>/index.json` | The same package as data |
 | `/stats/` | Growth over time, composition, full history line |
 | `/contributors/` | Index contributors · upstream thanks · ecosystem union |
-| `/guides/<slug>/` | The repo's own markdown docs, rendered in place |
+| `/docs/<slug>/` | The repo's own markdown docs, rendered in place |
 | `/index.json` | Everything (schema 1) — the API contract |
 | `/search-index.json`, `/sitemap.xml`, `/feed.xml` | Search payload, sitemap, Atom feed |
 
@@ -49,8 +57,8 @@ build tool. Its plugin (`.xpkgindex/plugins/mcpp.py`):
   the plugin returns `Identity.joined(...)`. Without it the site advertised
   `mcpp add json@3.12.0`, which the client rejects, and three different
   `imgui` packages collapsed onto one page.
-- **Classifies packages by how you consume them** — `import` (7), `#include`
-  (55), a tool binary (1), or an upstream-provided `mcpp.toml` (18). That axis
+- **Classifies packages by how you consume them** — `import`, `#include`,
+  a tool binary, or an upstream-provided `mcpp.toml`. That axis
   comes from the `mcpp = {}` extension block and is what a C++ user actually
   browses by.
 - **Reads `mcpp = {}`** into build-semantics blocks: modules, targets,

@@ -55,8 +55,26 @@ def _serve(args: argparse.Namespace) -> int:
     import http.server
     import socketserver
 
-    handler = functools.partial(http.server.SimpleHTTPRequestHandler,
-                                directory=os.path.abspath(args.output))
+    class Handler(http.server.SimpleHTTPRequestHandler):
+        """Preview server. Nothing it serves may be cached.
+
+        A page's filename never changes, so a browser that holds on to
+        `index.html` keeps requesting the stylesheet hash that page was built
+        with — and a rebuilt site looks like it did not rebuild at all. That
+        is a preview-only concern, and a preview that lies is worse than a
+        slow one.
+        """
+
+        def end_headers(self):
+            self.send_header("Cache-Control", "no-store, must-revalidate")
+            self.send_header("Pragma", "no-cache")
+            self.send_header("Expires", "0")
+            super().end_headers()
+
+        def log_message(self, fmt, *fmt_args):      # quieter than the default
+            pass
+
+    handler = functools.partial(Handler, directory=os.path.abspath(args.output))
     socketserver.TCPServer.allow_reuse_address = True
     with socketserver.TCPServer(("127.0.0.1", args.port), handler) as httpd:
         print(f"serving {args.output} at http://127.0.0.1:{args.port}/  (ctrl-c to stop)")
