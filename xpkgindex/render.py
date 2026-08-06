@@ -109,6 +109,7 @@ class Renderer:
             "page": page,
             "asset_v": self.asset_v,
             "docs_home": self._docs_home(),
+            "docs_titles": {g["slug"]: self._guide_title(g) for g in self.site.guides},
             "t": self.t,
             "lang": self.lang,
             "html_lang": self.t.html_lang,
@@ -180,11 +181,9 @@ class Renderer:
     def guides(self) -> None:
         # Titles follow the locale: a doc that ships a translation names
         # itself in that language, in the sidebar as well as on the page.
-        titles = {g["slug"]: self._guide_title(g) for g in self.site.guides}
         for guide in self.site.guides:
             self._render("guide.html", f"docs/{guide['slug']}/", "docs",
-                         guide=guide, body=self._guide_body(guide),
-                         docs_titles=titles)
+                         guide=guide, body=self._guide_body(guide))
 
     def _guide_title(self, guide: Dict[str, Any]) -> str:
         body = self._guide_body(guide)
