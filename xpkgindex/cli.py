@@ -30,6 +30,7 @@ def _generate(args: argparse.Namespace) -> int:
     try:
         site, config = build(args.directory, args.config, offline=args.offline,
                              strict=args.strict, refresh=getattr(args, "refresh", False),
+                             url_style=getattr(args, "url_style", ""),
                              build_info=_build_info())
     except BuildError as exc:
         print(f"error: {exc}", file=sys.stderr)
@@ -105,6 +106,10 @@ def main(argv=None) -> int:
                        help="re-fetch every cached upstream lookup, ignoring freshness; "
                             "run this on demand and commit the updated cache")
         p.add_argument("--base-url", default="", help="absolute base URL for sitemap/feed")
+        p.add_argument("--url-style", choices=["directory", "file"], default="",
+                       help="link form: 'directory' (/packages/x/) or 'file' "
+                            "(/packages/x/index.html), for a host that does not "
+                            "resolve a directory to its index. Overrides urls.style")
 
     gen = sub.add_parser("generate", help="generate the static site")
     common(gen)

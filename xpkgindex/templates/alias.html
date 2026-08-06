@@ -4,13 +4,13 @@
 
 {% block content %}
 {% if target %}
-<meta http-equiv="refresh" content="0; url={{ root }}packages/{{ target.slug }}/">
-<link rel="canonical" href="{{ root }}packages/{{ target.slug }}/">
+<meta http-equiv="refresh" content="0; url={{ root }}packages/{{ target.slug }}/{{ page_suffix }}">
+<link rel="canonical" href="{{ root }}packages/{{ target.slug }}/{{ page_suffix }}">
 <section class="blk">
   <h3>{{ t('alias.moved') }}</h3>
   <p>
     {{ t('alias.moved_body', short=short) }}
-    <a href="{{ root }}packages/{{ target.slug }}/"><code>{{ target.display }}</code></a>.
+    <a href="{{ root }}packages/{{ target.slug }}/{{ page_suffix }}"><code>{{ target.display }}</code></a>.
   </p>
 </section>
 {% else %}

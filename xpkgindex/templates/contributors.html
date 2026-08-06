@@ -24,7 +24,7 @@
         {% if p.packages %}
         <div class="person-pkgs">
           {% for slug in p.packages[:3] %}
-          <a href="{{ root }}packages/{{ slug }}/"><code>{{ slug }}</code></a>
+          <a href="{{ root }}packages/{{ slug }}/{{ page_suffix }}"><code>{{ slug }}</code></a>
           {% endfor %}
           {% if p.packages | length > 3 %}<span class="muted">+{{ p.packages | length - 3 }}</span>{% endif %}
         </div>

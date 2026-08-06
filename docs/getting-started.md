@@ -55,6 +55,7 @@ generated 81 packages -> site
 | `--strict` | Treat reconciliation warnings as errors — use in CI |
 | `--refresh` | Re-fetch every cached upstream lookup, ignoring freshness |
 | `--base-url` | Absolute base URL for `sitemap.xml` and `feed.xml` |
+| `--url-style` | `directory` (default) or `file` — see [Deployment](deployment.md#a-host-that-does-not-resolve-directories) |
 | `--port` | `serve` only (default 8000) |
 
 Warnings are not failures. A descriptor that will not parse, a missing guide

@@ -110,7 +110,7 @@
    line 3 forced the reader to re-parse every row. #}
 {% macro row_code(pkg, r, root) %}
   <div class="row-comment">
-    <a class="row-name" href="{{ root }}packages/{{ pkg.slug }}/">{{ pkg.display }}</a>
+    <a class="row-name" href="{{ root }}packages/{{ pkg.slug }}/{{ page_suffix }}">{{ pkg.display }}</a>
     {% if pkg.latest %}<span class="row-ver">{{ pkg.latest }}</span>{% endif %}
     {% if pkg.description %}<span class="row-desc"> — {{ pkg.description }}</span>{% endif %}
   </div>
@@ -133,7 +133,7 @@
    the whole question. #}
 {% macro row_card(pkg, r, root) %}
   <div class="row-top">
-    <a class="row-cname" href="{{ root }}packages/{{ pkg.slug }}/">
+    <a class="row-cname" href="{{ root }}packages/{{ pkg.slug }}/{{ page_suffix }}">
       {%- set parts = pkg.identity.display_parts -%}
       {%- if parts[0] %}<span class="ns">{{ parts[0] }}</span>{% endif -%}{{ parts[1] }}
     </a>

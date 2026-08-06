@@ -5,7 +5,7 @@
 {% block description %}{{ pkg.description or pkg.display }}{% endblock %}
 
 {% block content %}
-<nav class="crumbs"><a href="{{ root }}">{{ t('nav.packages') }}</a> <span>/</span> <code>{{ pkg.display }}</code></nav>
+<nav class="crumbs"><a href="{{ root }}{{ page_suffix }}">{{ t('nav.packages') }}</a> <span>/</span> <code>{{ pkg.display }}</code></nav>
 
 <div class="detail">
   <div class="detail-main">
@@ -119,7 +119,7 @@
         <dd>
           {% if pkg.required_by %}
             {% for slug in pkg.required_by %}
-            <a class="dep" href="{{ root }}packages/{{ slug }}/"><code>{{ slug }}</code></a>
+            <a class="dep" href="{{ root }}packages/{{ slug }}/{{ page_suffix }}"><code>{{ slug }}</code></a>
             {% endfor %}
           {% else %}<span class="muted">{{ t('pkg.none') }}</span>{% endif %}
         </dd>
@@ -170,7 +170,7 @@
         <li><a href="{{ config.github }}/blob/main/{{ pkg.source_file }}">{{ t('pkg.descriptor_source') }}</a></li>
         {% endif %}
         {% if site.guides %}
-        <li><a href="{{ root }}docs/{{ site.guides[0].slug }}/">{{ t('pkg.add_like_this') }}</a></li>
+        <li><a href="{{ root }}docs/{{ site.guides[0].slug }}/{{ page_suffix }}">{{ t('pkg.add_like_this') }}</a></li>
         {% endif %}
       </ul>
     </section>

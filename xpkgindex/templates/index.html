@@ -54,7 +54,7 @@
   {% if docs_home %}
   {% set cta = config.docs_cta %}
   <aside class="hero-aside">
-    <a class="cta-card" href="{{ root }}docs/{{ docs_home }}/" data-tilt>
+    <a class="cta-card" href="{{ root }}docs/{{ docs_home }}/{{ page_suffix }}" data-tilt>
       <span class="cta-glow" aria-hidden="true"></span>
       {% if cta.get('eyebrow') %}<span class="cta-eyebrow">{{ cta.eyebrow | loc }}</span>{% endif %}
       <span class="cta-title">{{ cta.get('title') | loc or config.docs_cta_label | loc or t('home.quick_start') }}</span>
@@ -86,7 +86,7 @@
       {{ m.chart(growth) }}
       <div class="pulse-foot">
         <span>{{ growth.first_date }}</span>
-        <a href="{{ root }}stats/">{{ t('home.all_stats') }}</a>
+        <a href="{{ root }}stats/{{ page_suffix }}">{{ t('home.all_stats') }}</a>
         <span>{{ growth.last_date }} · {{ growth.last.value }}</span>
       </div>
     </div>
@@ -103,7 +103,7 @@
           <span class="tl-date">{{ ev.date[5:] }} {% if ev.clock %}<i>{{ ev.clock }}</i>{% endif %}</span>
           <span class="tl-body">
             {% if ev.slug %}
-            <a href="{{ root }}packages/{{ ev.slug }}/"><code>{{ ev.display }}</code></a>
+            <a href="{{ root }}packages/{{ ev.slug }}/{{ page_suffix }}"><code>{{ ev.display }}</code></a>
             {% else %}<code>{{ ev.display }}</code>{% endif %}
             <span class="tl-kind">{{ t('kind.' ~ ev.kind) }}</span>
             {% if ev.by %}<span class="tl-by">{{ ev.by }}</span>{% endif %}
@@ -116,7 +116,7 @@
   </div>
 
   {% if site.contributors %}
-  <a class="contrib-strip" href="{{ root }}contributors/">
+  <a class="contrib-strip" href="{{ root }}contributors/{{ page_suffix }}">
     <span class="contrib-label">{{ t('home.contributors') }}</span>
     <span class="contrib-avatars">
       {% for p in site.contributors[:12] %}{{ m.avatar(p, 24) }}{% endfor %}

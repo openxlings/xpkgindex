@@ -55,7 +55,8 @@ def _strip_language_line(tokens: List[Any], base_dir: str, siblings: Set[str]) -
 
 
 def _render(text: str, base_dir: str, guide_slugs: Dict[str, str],
-            depth: int, siblings: Optional[Set[str]] = None) -> Dict[str, Any]:
+            depth: int, siblings: Optional[Set[str]] = None,
+            suffix: str = "") -> Dict[str, Any]:
     # Raw HTML is allowed: these documents belong to the index repository and
     # are written to render on GitHub too, where `<details>` disclosures are
     # idiomatic. Escaping them printed the tags as text. The trust level is
@@ -91,12 +92,12 @@ def _render(text: str, base_dir: str, guide_slugs: Dict[str, str],
         toc.append({"level": int(tok.tag[1]), "title": title, "anchor": anchor})
 
     html = md.renderer.render(tokens, md.options, {})
-    html = _rewrite_links(html, base_dir, guide_slugs, depth)
+    html = _rewrite_links(html, base_dir, guide_slugs, depth, suffix)
     return {"html": html, "toc": toc, "heading": heading}
 
 
 def _rewrite_links(html: str, base_dir: str, guide_slugs: Dict[str, str],
-                   depth: int) -> str:
+                   depth: int, suffix: str = "") -> str:
     """Point relative markdown links at the rendered guide, or at the repo."""
     up = "../" * depth
 
@@ -109,13 +110,14 @@ def _rewrite_links(html: str, base_dir: str, guide_slugs: Dict[str, str],
         slug = guide_slugs.get(target)
         if slug:
             frag = href.split("#", 1)[1] if "#" in href else ""
-            return f'href="{up}docs/{slug}/{("#" + frag) if frag else ""}"'
+            return f'href="{up}docs/{slug}/{suffix}{("#" + frag) if frag else ""}"'
         return match.group(0)
 
     return re.sub(r'href="([^"]+)"', repl, html)
 
 
-def load(root: str, entries: List[Any]) -> (List[Dict[str, Any]], List[str]):
+def load(root: str, entries: List[Any],
+         suffix: str = "") -> (List[Dict[str, Any]], List[str]):
     """Render every configured guide (plus its translations)."""
     warnings: List[str] = []
     slug_by_path = {e.path.replace(os.sep, "/"): e.slug for e in entries}
@@ -137,7 +139,8 @@ def load(root: str, entries: List[Any]) -> (List[Dict[str, Any]], List[str]):
         siblings |= {r.replace(os.sep, "/") for r in (entry.translations or {}).values()}
 
         base_dir = os.path.dirname(entry.path)
-        rendered = _render(text, base_dir, slug_by_path, depth=2, siblings=siblings)
+        rendered = _render(text, base_dir, slug_by_path, depth=2, siblings=siblings,
+                           suffix=suffix)
 
         langs: Dict[str, Dict[str, Any]] = {}
         for lang, rel in (entry.translations or {}).items():
@@ -147,7 +150,7 @@ def load(root: str, entries: List[Any]) -> (List[Dict[str, Any]], List[str]):
                 continue
             with open(lpath, "r", encoding="utf-8", errors="replace") as f:
                 langs[lang] = _render(f.read(), os.path.dirname(rel), slug_by_path,
-                                      depth=3, siblings=siblings)
+                                      depth=3, siblings=siblings, suffix=suffix)
 
         out.append({
             "slug": entry.slug,

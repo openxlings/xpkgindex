@@ -285,9 +285,15 @@ def _attach_people(packages: List[Package], hist: git_history.GitHistory,
 
 def build(root: str, config_path: Optional[str] = None, *,
           offline: bool = False, strict: bool = False, refresh: bool = False,
+          url_style: str = "",
           build_info: Optional[Dict[str, str]] = None) -> (SiteData, SiteConfig):
     root = os.path.abspath(root)
     config = load_config(root, config_path)
+    # Applied here rather than after the build: guide bodies have their links
+    # rewritten while the site is being built, so a style chosen at render
+    # time would arrive too late for them.
+    if url_style:
+        config.url_style = url_style
     site = SiteData()
     site.build = dict(build_info or {})
 
@@ -362,7 +368,7 @@ def build(root: str, config_path: Optional[str] = None, *,
     _attach_people(packages, hist, site.contributors, upstream_by_owner)
 
     # -- guides -----------------------------------------------------------
-    site.guides, gwarn = guides_mod.load(root, config.guides)
+    site.guides, gwarn = guides_mod.load(root, config.guides, config.page_suffix)
     site.warnings.extend(gwarn)
 
     site.warnings.extend(host.warnings)

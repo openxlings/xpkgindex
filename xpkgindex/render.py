@@ -75,6 +75,9 @@ class Renderer:
         # The JSON documents are written once, in the site's default language.
         serialize.set_locale(self.default)
         self.t = i18n.Translator(lang)
+        # "" for directory URLs, "index.html" for hosts that do not resolve a
+        # directory to its index. Templates append it to every internal link.
+        self.suffix = config.page_suffix
         self.asset_v = self.asset_version()
 
     # -- helpers ----------------------------------------------------------
@@ -85,6 +88,8 @@ class Renderer:
         links = []
         for code in self.langs:
             url = up + ("" if code == self.default else f"{code}/") + page_path
+            if url.endswith("/") or not url:
+                url += self.suffix
             links.append({
                 "code": code,
                 "name": i18n.LANGUAGE_NAMES.get(code, code),
@@ -132,6 +137,7 @@ class Renderer:
             "site_root": root + ("../" if self.prefix else ""),   # shared assets/data
             "page": page,
             "asset_v": self.asset_v,
+            "page_suffix": self.suffix,
             "docs_home": self._docs_home(),
             "docs_nav_label": self._docs_nav_label(),
             "docs_titles": {g["slug"]: self._guide_title(g) for g in self.site.guides},
@@ -279,14 +285,15 @@ class Renderer:
         paths = ["", "stats/", "contributors/", "about/"]
         paths += [f"packages/{p.slug}/" for p in self.site.packages]
         paths += [f"docs/{g['slug']}/" for g in self.site.guides]
-        urls = list(paths)
+        urls = [p + self.suffix for p in paths]
         for lang in self.langs[1:]:
-            urls += [f"{lang}/{p}" for p in paths]
+            urls += [f"{lang}/{p}{self.suffix}" for p in paths]
         _write(os.path.join(self.out, "sitemap.xml"),
                self.env.get_template("sitemap.xml").render(base=base, urls=urls))
         _write(os.path.join(self.out, "feed.xml"),
                self.env.get_template("feed.xml").render(
-                   base=base, config=self.config, events=self.site.history[:40]))
+                   base=base, config=self.config, events=self.site.history[:40],
+                   page_suffix=self.suffix))
 
     def asset_version(self) -> str:
         """Short content hash for `?v=` on the CSS and JS links.

@@ -148,6 +148,30 @@ subdirectory, or opened from disk. Serve `site/` with any static file server;
 directory-shaped URLs need `index.html` resolution, which every one of them
 does by default.
 
+### A host that does not resolve directories
+
+Some static hosts serve files and nothing else: `/stats/` is a 404 there and
+only `/stats/index.html` exists. Every internal link this framework writes is
+directory-shaped, so on such a host the homepage renders and the first click
+404s.
+
+```bash
+xpkgindex generate . --output site --url-style file
+```
+
+Every internal link then ends in `index.html` — including the ones inside your
+own documents, which are rewritten while the site is built. The files written
+to disk are identical either way, so this is a re-render, not a different
+site, and the same repository can publish both forms:
+
+```bash
+xpkgindex generate . --output site                     # GitHub Pages
+xpkgindex generate . --output site-flat --url-style file   # the other host
+```
+
+`urls.style` in the config sets a default for every build; the flag overrides
+it for one.
+
 For a local look before publishing:
 
 ```bash

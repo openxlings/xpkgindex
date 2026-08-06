@@ -54,6 +54,7 @@ generated 81 packages -> site
 | `--strict` | 把对账警告当作错误 —— CI 里用 |
 | `--refresh` | 忽略新鲜度,重新抓取全部缓存条目 |
 | `--base-url` | 供 `sitemap.xml` 和 `feed.xml` 使用的绝对基址 |
+| `--url-style` | `directory`(默认)或 `file` —— 见[部署](deployment.md#不解析目录的宿主) |
 | `--port` | 仅 `serve`(默认 8000) |
 
 警告不是失败。描述符解析不了、文档文件缺失、插件钩子抛异常 —— 构建会说出来,然后

@@ -266,9 +266,12 @@
     cursor = list.length ? 0 : -1;
     if (!list.length) { closeResults(); return; }
     var base = input.getAttribute('data-packages');
+    // Empty for directory URLs; "index.html" where the host does not resolve
+    // a directory to its index.
+    var suffix = input.getAttribute('data-page-suffix') || '';
     results.innerHTML = list.map(function (p, i) {
       return '<a class="sr' + (i === 0 ? ' on' : '') + '" role="option" href="' +
-        base + encodeURIComponent(p.s) + '/">' +
+        base + encodeURIComponent(p.s) + '/' + suffix + '">' +
         '<span class="sr-name">' + escapeHtml(p.d) + '</span>' +
         (p.v ? '<span class="sr-ver">' + escapeHtml(p.v) + '</span>' : '') +
         (p.t ? '<span class="sr-desc">' + escapeHtml(p.t) + '</span>' : '') +

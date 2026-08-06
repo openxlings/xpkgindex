@@ -96,6 +96,12 @@ class SiteConfig:
 
     # -- build ------------------------------------------------------------
     pkgs_dir: str = "pkgs"
+    # "directory" — /packages/x/ — is the canonical form and what a server
+    # route adopts unchanged. "file" appends index.html to every internal
+    # link, for a host that serves files and does not resolve a directory to
+    # its index (Bilibili's Toy hosting is one: /stats/ is a 404 there, only
+    # /stats/index.html exists). The pages written are identical either way.
+    url_style: str = "directory"
     list_variant: str = "code"     # code | card — plugins may override per package
     # Extra growth-chart lines, each a facet filter. The total is always drawn
     # first; these are added on top.
@@ -128,6 +134,11 @@ class SiteConfig:
 
     # -- source -----------------------------------------------------------
     root: str = "."
+
+    @property
+    def page_suffix(self) -> str:
+        """Appended to every internal link that points at a directory."""
+        return "index.html" if self.url_style == "file" else ""
 
     @property
     def repo_slug(self) -> str:
@@ -232,6 +243,8 @@ def load_config(directory: str, config_path: Optional[str] = None) -> SiteConfig
     cfg.density = theme.get("density", cfg.density)
 
     cfg.pkgs_dir = data.get("pkgs_dir", cfg.pkgs_dir)
+    urls = data.get("urls", {}) or {}
+    cfg.url_style = urls.get("style", cfg.url_style)
     cfg.list_variant = (data.get("list") or {}).get("variant", cfg.list_variant)
 
     growth = data.get("growth") or {}

@@ -103,6 +103,7 @@
 | 键 | 默认 | 说明 |
 |---|---|---|
 | `pkgs_dir` | `pkgs` | 描述符所在目录,相对仓库根 |
+| `urls.style` | `directory` | `directory` 产出 `/packages/x/`;`file` 产出 `/packages/x/index.html`,用于「只提供文件、不把目录解析成 index」的宿主。`--url-style` 可在单次构建里覆盖 |
 | `base_url` | — | 绝对 URL,供 `sitemap.xml` / `feed.xml` 使用;`--base-url` 会覆盖 |
 | `languages` | `["en"]` | 界面语言。第一个是默认语言,放在站点根 |
 | `install_command_template` | `{ref}@{version}` | 占位符:`{ref}`、`{name}`、`{namespace}`、`{display}`、`{version}` |

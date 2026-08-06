@@ -105,6 +105,7 @@ implemented.
 | Key | Default | Notes |
 |---|---|---|
 | `pkgs_dir` | `pkgs` | Where descriptors live, relative to the repo root |
+| `urls.style` | `directory` | `directory` gives `/packages/x/`; `file` gives `/packages/x/index.html`, for a host that serves files and never resolves a directory to its index. `--url-style` overrides it per build |
 | `base_url` | — | Absolute URL, used by `sitemap.xml` and `feed.xml`. `--base-url` overrides |
 | `languages` | `["en"]` | UI locales. The first is the default and lives at the root |
 | `install_command_template` | `{ref}@{version}` | Placeholders: `{ref}`, `{name}`, `{namespace}`, `{display}`, `{version}` |

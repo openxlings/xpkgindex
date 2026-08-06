@@ -6,7 +6,7 @@
 <div class="guide">
   <div class="guide-main">
     <nav class="crumbs">
-      <a href="{{ root }}docs/{{ site.guides[0].slug }}/">{{ config.guides_nav_label or t('guide.guides') }}</a>
+      <a href="{{ root }}docs/{{ site.guides[0].slug }}/{{ page_suffix }}">{{ config.guides_nav_label or t('guide.guides') }}</a>
       <span>/</span> {{ docs_titles[guide.slug] }}
     </nav>
     <h1 class="page-title">{{ docs_titles[guide.slug] }}</h1>
@@ -23,11 +23,11 @@
       <h4>{{ docs_nav_label }}</h4>
       <ul class="side-links">
         {% for g in site.guides %}
-        <li><a href="{{ root }}docs/{{ g.slug }}/" class="{{ 'on' if g.slug == guide.slug }}">{{ docs_titles.get(g.slug, g.title) }}</a></li>
+        <li><a href="{{ root }}docs/{{ g.slug }}/{{ page_suffix }}" class="{{ 'on' if g.slug == guide.slug }}">{{ docs_titles.get(g.slug, g.title) }}</a></li>
         {% endfor %}
         {# About belongs in this list as well as in the nav: from inside the
            docs it reads as one more thing to know about the index. #}
-        <li><a href="{{ root }}about/">{{ t('about.title') }}</a></li>
+        <li><a href="{{ root }}about/{{ page_suffix }}">{{ t('about.title') }}</a></li>
       </ul>
     </section>
 

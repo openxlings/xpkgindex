@@ -65,7 +65,7 @@
 
 <header class="topbar">
   <div class="wrap topbar-inner">
-    <a class="brand" href="{{ root }}">{{ config.logo | loc }}</a>
+    <a class="brand" href="{{ root }}{{ page_suffix }}">{{ config.logo | loc }}</a>
 
     {# On a phone the nav collapses into this button's panel. The wrapper is
        `display: contents` on wider screens, so the nav stays an ordinary flex
@@ -82,15 +82,15 @@
          `display: contents` and its children lay out in the header itself. #}
       <div class="nav-panel">
       <nav class="nav">
-      <a href="{{ root }}" class="{{ 'on' if page in ('home', 'packages') }}">{{ t('nav.packages') }}</a>
-      <a href="{{ root }}stats/" class="{{ 'on' if page == 'stats' }}">{{ t('nav.stats') }}</a>
-      <a href="{{ root }}contributors/" class="{{ 'on' if page == 'contributors' }}">{{ t('nav.contributors') }}</a>
+      <a href="{{ root }}{{ page_suffix }}" class="{{ 'on' if page in ('home', 'packages') }}">{{ t('nav.packages') }}</a>
+      <a href="{{ root }}stats/{{ page_suffix }}" class="{{ 'on' if page == 'stats' }}">{{ t('nav.stats') }}</a>
+      <a href="{{ root }}contributors/{{ page_suffix }}" class="{{ 'on' if page == 'contributors' }}">{{ t('nav.contributors') }}</a>
       {# More than one document: the nav item still navigates (to the landing
          doc), and hovering or focusing it reveals the rest. A menu that only
          opened on hover would be unreachable by keyboard and on touch. #}
       {% if docs_home %}
       <div class="nav-item{{ ' has-menu' if site.guides | length > 1 }}">
-        <a href="{{ root }}docs/{{ docs_home }}/" class="{{ 'on' if page == 'docs' }}"
+        <a href="{{ root }}docs/{{ docs_home }}/{{ page_suffix }}" class="{{ 'on' if page == 'docs' }}"
            {% if site.guides | length > 1 %}aria-haspopup="true"{% endif %}>
           {{ docs_nav_label }}
           {% if site.guides | length > 1 %}
@@ -103,7 +103,7 @@
         {% if site.guides | length > 1 %}
         <div class="nav-menu menu-pop">
           {% for g in site.guides %}
-          <a href="{{ root }}docs/{{ g.slug }}/">{{ docs_titles.get(g.slug, g.title) }}</a>
+          <a href="{{ root }}docs/{{ g.slug }}/{{ page_suffix }}">{{ docs_titles.get(g.slug, g.title) }}</a>
           {% endfor %}
         </div>
         {% endif %}
@@ -111,20 +111,22 @@
       {% endif %}
       {# About keeps its own nav slot as well as its entry under Docs: it is
          where people look for "what is this index", not a document. #}
-      <a href="{{ root }}about/" class="{{ 'on' if page == 'about' }}">{{ t('nav.about') }}</a>
+      <a href="{{ root }}about/{{ page_suffix }}" class="{{ 'on' if page == 'about' }}">{{ t('nav.about') }}</a>
       </nav>
 
       <div class="topbar-right">
       {# Suggestions come from search-index.json and Enter opens the best
          match. The old form posted to the homepage, which meant searching
          from a package page threw away the page you were on. #}
-      <form class="search" action="{{ root }}" method="get" role="search">
+      <form class="search" action="{{ root }}{{ page_suffix }}" method="get" role="search">
         <input type="search" name="q" id="q" placeholder="{{ t('nav.search') }}"
                aria-label="{{ t('nav.search') }}" autocomplete="off"
                role="combobox" aria-autocomplete="list" aria-expanded="false"
                aria-controls="search-results"
                data-index="{{ site_root }}search-index.json"
-               data-packages="{{ root }}packages/">
+               data-packages="{{ root }}packages/"
+               {# the search builds `<base><slug>/<suffix>` itself #}
+               data-page-suffix="{{ page_suffix }}">
         <div class="search-results" id="search-results" role="listbox" hidden></div>
       </form>
 

@@ -139,6 +139,26 @@ xpkgindex generate . --output site --base-url https://packages.example.org
 所以同一份产物在域名根目录、子目录,甚至从磁盘打开都能用。用任何静态文件服务器
 托管 `site/` 即可;目录形态的 URL 需要 `index.html` 解析,而这是它们默认都做的。
 
+### 不解析目录的宿主
+
+有些静态宿主只提供文件:`/stats/` 在那里是 404,只有 `/stats/index.html` 存在。
+本框架写出的内链全是目录形态,所以在这类宿主上,首页能渲染,点第一下就 404。
+
+```bash
+xpkgindex generate . --output site --url-style file
+```
+
+之后所有内链都以 `index.html` 结尾 —— 包括你自己文档正文里的那些(它们在构建期
+被改写)。两种形态写到磁盘的文件完全相同,所以这只是重新渲染一次,而不是另一个
+站点;同一个仓库可以同时发两种形态:
+
+```bash
+xpkgindex generate . --output site                     # GitHub Pages
+xpkgindex generate . --output site-flat --url-style file   # 另一个宿主
+```
+
+配置里的 `urls.style` 设定每次构建的默认值,命令行参数覆盖单次构建。
+
 发布前想本地看一眼:
 
 ```bash
