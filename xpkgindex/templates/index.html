@@ -1,125 +1,172 @@
 {% extends "base.html" %}
-
-{% block title %}{{ config.title }}{% endblock %}
+{% import "_macros.html" as m with context %}
 
 {% block content %}
+
+{# ------------------------------------------------------ 1. hero #}
 <section class="hero">
-    <h1 class="hero-title">{{ config.title }}</h1>
-    <p class="hero-desc">{{ config.description }}</p>
+  <div class="hero-main">
+    <h1>{{ config.title | loc }}</h1>
+    {% if config.description %}<p class="lede">{{ config.description | loc }}</p>{% endif %}
 
-    {% if config.project_name or config.github %}
-    <div class="hero-meta">
-        {% if config.project_name %}
-        <a href="{{ config.project_url or '#' }}" class="hero-meta-link hero-meta-brand" target="_blank" rel="noopener">{{ config.project_name }}</a>
-        <span class="hero-meta-sep">|</span>
-        {% endif %}
-        {% if config.github %}
-        <a href="{{ config.github }}" class="hero-meta-link" target="_blank" rel="noopener">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z"/></svg>
-            GitHub
-        </a>
-        {% endif %}
-        {% if config.docs_url %}
-        <a href="{{ config.docs_url }}" class="hero-meta-link" target="_blank" rel="noopener">
-            <svg width="14" height="14" viewBox="0 0 16 16" fill="currentColor"><path d="M1 2.828c.885-.37 2.154-.769 3.388-.893 1.33-.134 2.458.063 3.112.752v9.746c-.935-.53-2.12-.603-3.213-.493-1.18.12-2.37.461-3.287.811zm7.5-.141c.654-.689 1.782-.886 3.112-.752 1.234.124 2.503.523 3.388.893v9.923c-.918-.35-2.107-.692-3.287-.81-1.094-.111-2.278-.039-3.213.492zM8 1.783C7.015.936 5.587.81 4.287.94c-1.514.153-3.042.672-3.994 1.105A.5.5 0 0 0 0 2.5v11a.5.5 0 0 0 .707.455c.882-.4 2.303-.881 3.68-1.02 1.409-.142 2.59.087 3.223.877a.5.5 0 0 0 .78 0c.633-.79 1.814-1.019 3.222-.877 1.378.139 2.8.62 3.681 1.02A.5.5 0 0 0 16 13.5v-11a.5.5 0 0 0-.293-.455c-.952-.433-2.48-.952-3.994-1.105C10.413.809 8.985.936 8 1.783"/></svg>
-            Docs
-        </a>
-        {% endif %}
-        {% if config.forum %}
-        <a href="{{ config.forum }}" class="hero-meta-link" target="_blank" rel="noopener">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M20 2H4c-1.1 0-2 .9-2 2v18l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zm0 14H6l-2 2V4h16v12z"/></svg>
-            Forum
-        </a>
-        {% endif %}
-    </div>
-    {% endif %}
-
-    <div class="hero-stats">
-        <span class="stat"><strong>{{ total_packages }}</strong> packages</span>
-        <span class="stat-sep">&middot;</span>
-        <span class="stat"><strong>{{ total_categories }}</strong> categories</span>
+    <div class="stat-row">
+      <span><b>{{ stats.packages }}</b> {{ t('stat.packages') }}</span>
+      <span><b>{{ stats.namespaces }}</b> {{ t('stat.namespaces') }}</span>
+      <span><b>{{ stats.versions }}</b> {{ t('stat.versions') }}</span>
+      {% for extra in site.index_meta.get('hero_stats', []) %}
+      <span><b>{{ extra.value }}</b> {{ extra.label | loc }}</span>
+      {% endfor %}
     </div>
 
-    {% if config.install_commands %}
-    <div class="hero-install-wrap">
-        <button class="hero-install-platform" id="install-os-toggle" aria-label="Switch platform" title="Click to switch platform">
-            <span id="install-os-icon">{{ icon_linux(16) }}</span>
-        </button>
-        <div class="hero-install" id="hero-install">
-            <span class="hero-install-label">$ </span>
-            <code class="hero-install-cmd" id="install-cmd-unix">{{ config.install_commands.get('unix', '') }}</code>
-            <code class="hero-install-cmd" id="install-cmd-windows" style="display:none;">{{ config.install_commands.get('windows', '') }}</code>
-            <button class="hero-install-copy btn-copy" data-target="install-cmd-unix" aria-label="Copy install command" title="Copy">
-                <svg class="copy-icon" width="14" height="14" viewBox="0 0 16 16" fill="currentColor"><path d="M4 1.5H3a2 2 0 0 0-2 2V14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V3.5a2 2 0 0 0-2-2h-1v1h1a1 1 0 0 1 1 1V14a1 1 0 0 1-1 1H3a1 1 0 0 1-1-1V3.5a1 1 0 0 1 1-1h1z"/><path d="M9.5 1a.5.5 0 0 1 .5.5v1a.5.5 0 0 1-.5.5h-3a.5.5 0 0 1-.5-.5v-1a.5.5 0 0 1 .5-.5zm-3-1A1.5 1.5 0 0 0 5 1.5v1A1.5 1.5 0 0 0 6.5 4h3A1.5 1.5 0 0 0 11 2.5v-1A1.5 1.5 0 0 0 9.5 0z"/></svg>
-                <svg class="check-icon" width="14" height="14" viewBox="0 0 16 16" fill="currentColor" style="display:none;"><path d="M13.854 3.646a.5.5 0 0 1 0 .708l-7 7a.5.5 0 0 1-.708 0l-3.5-3.5a.5.5 0 1 1 .708-.708L6.5 10.293l6.646-6.647a.5.5 0 0 1 .708 0"/></svg>
-            </button>
+    {# Every platform's command is rendered; site.js reveals only the matching
+       one and turns the labels into a switcher, so a JS-less visitor still
+       sees them all. #}
+    {% if config.install %}
+    <div class="install">
+      {% if config.install.command %}
+      <div class="install-label">{{ config.install.label | loc or t('home.install') }}</div>
+      {{ m.cmd(config.install.command, primary=True) }}
+      {% endif %}
+
+      {% if config.install.fallback %}
+      {% if config.install.command %}
+      <details class="install-more">
+        <summary>{{ config.install.summary | loc or t('home.other_install') }}</summary>
+        <div class="install-more-body" data-os-group>
+          {{ m.os_commands(config.install.fallback, nested=True) }}
         </div>
+      </details>
+      {% else %}
+      {% if config.install.label %}<div class="install-label">{{ config.install.label | loc }}</div>{% endif %}
+      <div data-os-group>
+        {{ m.os_commands(config.install.fallback, nested=False) }}
+      </div>
+      {% endif %}
+      {% endif %}
     </div>
     {% endif %}
+  </div>
 
+  {# The card sits in the hero's empty right-hand side, centred against the
+     install block: "get it" on the left, "learn it" on the right. Its
+     contents come from the site config, so an index decides what a newcomer
+     should see first. #}
+  {% if docs_home %}
+  {% set cta = config.docs_cta %}
+  <aside class="hero-aside">
+    <a class="cta-card" href="{{ root }}docs/{{ docs_home }}/{{ page_suffix }}" data-tilt>
+      <span class="cta-glow" aria-hidden="true"></span>
+      {% if cta.get('eyebrow') %}<span class="cta-eyebrow">{{ cta.eyebrow | loc }}</span>{% endif %}
+      <span class="cta-title">{{ cta.get('title') | loc or config.docs_cta_label | loc or t('home.quick_start') }}</span>
+      {% if cta.get('description') %}<span class="cta-desc">{{ cta.description | loc }}</span>{% endif %}
+      {% if cta.get('lines') %}
+      <span class="cta-lines">
+        {% for line in cta.lines %}<code>{{ line }}</code>{% endfor %}
+      </span>
+      {% endif %}
+      <span class="cta-action">
+        {{ cta.get('action') | loc or t('home.quick_start') }}
+        <svg class="cta-arrow" viewBox="0 0 16 16" width="15" height="15" aria-hidden="true">
+          <path fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"
+                stroke-linejoin="round" d="M3 8h9M8.5 4.5 12 8l-3.5 3.5"/>
+        </svg>
+      </span>
+    </a>
+  </aside>
+  {% endif %}
 </section>
 
-{% set all_categories = [] %}
-{% for pkg in packages %}
-    {% for cat in pkg.categories %}
-        {% if cat not in all_categories %}
-            {% if all_categories.append(cat) %}{% endif %}
-        {% endif %}
-    {% endfor %}
-{% endfor %}
+{# ------------------------------------------------- 2. pulse band #}
+{% if growth or recent or site.contributors %}
+<section class="pulse">
+  <div class="pulse-grid">
+    {% if growth %}
+    <div class="pulse-card">
+      <h2>{{ t('home.growth') }}</h2>
+      {{ m.chart(growth) }}
+      <div class="pulse-foot">
+        <span>{{ growth.first_date }}</span>
+        <a href="{{ root }}stats/{{ page_suffix }}">{{ t('home.all_stats') }}</a>
+        <span>{{ growth.last_date }} · {{ growth.last.value }}</span>
+      </div>
+    </div>
+    {% endif %}
 
-{% if all_categories %}
-<section class="filters" role="toolbar" aria-label="Filter by category">
-    <button class="filter-btn active" data-category="all">All</button>
-    {% for cat in all_categories | sort %}
-    <button class="filter-btn" data-category="{{ cat }}">{{ cat }}</button>
-    {% endfor %}
+    {% if recent %}
+    <div class="pulse-card">
+      <h2>{{ t('home.history') }}</h2>
+      {# One entry per package: a bump day touches several descriptors in one
+         commit and would otherwise fill this list with the same afternoon. #}
+      <ol class="timeline">
+        {% for ev in recent %}
+        <li class="tl-{{ ev.kind }}">
+          <span class="tl-date">{{ ev.date[5:] }} {% if ev.clock %}<i>{{ ev.clock }}</i>{% endif %}</span>
+          <span class="tl-body">
+            {% if ev.slug %}
+            <a href="{{ root }}packages/{{ ev.slug }}/{{ page_suffix }}"><code>{{ ev.display }}</code></a>
+            {% else %}<code>{{ ev.display }}</code>{% endif %}
+            <span class="tl-kind">{{ t('kind.' ~ ev.kind) }}</span>
+            {% if ev.by %}<span class="tl-by">{{ ev.by }}</span>{% endif %}
+          </span>
+        </li>
+        {% endfor %}
+      </ol>
+    </div>
+    {% endif %}
+  </div>
+
+  {% if site.contributors %}
+  <a class="contrib-strip" href="{{ root }}contributors/{{ page_suffix }}">
+    <span class="contrib-label">{{ t('home.contributors') }}</span>
+    <span class="contrib-avatars">
+      {% for p in site.contributors[:12] %}{{ m.avatar(p, 24) }}{% endfor %}
+      {% if site.contributors | length > 12 %}
+      <span class="contrib-more">+{{ site.contributors | length - 12 }}</span>
+      {% endif %}
+    </span>
+    <span class="contrib-cta">{{ t('home.see_everyone') }}</span>
+  </a>
+  {% endif %}
 </section>
 {% endif %}
 
-<section class="package-grid" id="package-grid">
-    {% for pkg in packages %}
-    <a href="packages/{{ pkg.name | safe_filename }}.html" class="package-card"
-       data-name="{{ pkg.name | lower }}"
-       data-description="{{ pkg.description | lower }}"
-       data-keywords="{{ pkg.keywords | join(' ') | lower }}"
-       data-categories="{{ pkg.categories | join(' ') }}"
-       data-platforms="{{ pkg.platforms.keys() | join(' ') }}">
-        <div class="card-header">
-            <h3 class="card-name">{{ pkg.name }}</h3>
-            <div class="card-badges">
-                {% if pkg.platforms %}
-                    {% set latest = [] %}
-                    {% for pname, pinfo in pkg.platforms.items() %}
-                        {% if pinfo.latest_version and pinfo.latest_version not in latest %}
-                            {% if latest.append(pinfo.latest_version) %}{% endif %}
-                        {% endif %}
-                    {% endfor %}
-                    {% if latest %}
-                    <span class="badge badge-version">{{ latest[0] }}</span>
-                    {% endif %}
-                {% endif %}
-                <span class="badge badge-status badge-{{ pkg.status }}">{{ pkg.status }}</span>
-            </div>
-        </div>
-        <p class="card-desc">{{ pkg.description | truncate(120) if pkg.description else 'No description' }}</p>
-        <div class="card-footer">
-            <div class="card-platforms">
-                {% if 'linux' in pkg.platforms %}<span title="Linux">{{ icon_linux(16) }}</span>{% endif %}
-                {% if 'windows' in pkg.platforms %}<span title="Windows">{{ icon_windows(16) }}</span>{% endif %}
-                {% if 'macosx' in pkg.platforms %}<span title="macOS">{{ icon_macos(16) }}</span>{% endif %}
-            </div>
-            <div class="card-tags">
-                {% for cat in pkg.categories[:3] %}
-                <span class="tag">{{ cat }}</span>
-                {% endfor %}
-            </div>
-        </div>
-    </a>
+{# ------------------------------------------------ 3. facets + list #}
+<section class="listing">
+  {# One row per axis, each capped: xim-pkgindex has ~40 categories and an
+     uncapped flat list buried the package rows under five rows of chips. #}
+  <div class="facets" id="facets">
+    <div class="facet-group">
+      <span class="facet-axis">{{ t('home.show') }}</span>
+      <button class="facet on" data-facet="all">{{ t('home.all') }} <span class="n">{{ stats.packages }}</span></button>
+    </div>
+    {% for facet in site.facets %}
+    <div class="facet-group">
+      <span class="facet-axis">{{ t(facet.label_key) if facet.label_key else (facet.label | loc or facet.key) }}</span>
+      {% for v in facet.values[:8] %}
+      <button class="facet tone-{{ v.tone or 'neutral' }}"
+              data-facet="{{ facet.key }}" data-value="{{ v.key }}">
+        {{ v.label | loc or v.key }} <span class="n">{{ v.count }}</span>
+      </button>
+      {% endfor %}
+      {% if facet.values | length > 8 %}
+        {% for v in facet.values[8:] %}
+        <button class="facet facet-extra tone-{{ v.tone or 'neutral' }}" hidden
+                data-facet="{{ facet.key }}" data-value="{{ v.key }}">
+          {{ v.label | loc or v.key }} <span class="n">{{ v.count }}</span>
+        </button>
+        {% endfor %}
+        <button class="facet-more" type="button">{{ t('home.more', n=facet.values | length - 8) }}</button>
+      {% endif %}
+    </div>
     {% endfor %}
-</section>
+  </div>
 
-<div id="no-results" class="no-results" style="display:none;">
-    <p>No packages match your search.</p>
-</div>
+  <div class="rows" id="rows">
+    {% for pkg in site.packages %}
+    {{ m.package_row(pkg, root) }}
+    {% endfor %}
+  </div>
+
+  <p class="empty" id="empty" hidden>{{ t('home.no_match') }}</p>
+</section>
 {% endblock %}

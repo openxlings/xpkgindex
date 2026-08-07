@@ -1,0 +1,46 @@
+{% extends "base.html" %}
+{% block title %}{{ docs_titles[guide.slug] }} · {{ config.title | loc }}{% endblock %}
+{% block description %}{{ docs_titles[guide.slug] }} — contributor guide for {{ config.title | loc }}.{% endblock %}
+
+{% block content %}
+<div class="guide">
+  <div class="guide-main">
+    <nav class="crumbs">
+      <a href="{{ root }}docs/{{ site.guides[0].slug }}/{{ page_suffix }}">{{ config.guides_nav_label or t('guide.guides') }}</a>
+      <span>/</span> {{ docs_titles[guide.slug] }}
+    </nav>
+    <h1 class="page-title">{{ docs_titles[guide.slug] }}</h1>
+    {# The guide body follows the site language when the index ships a
+       translation for it, and stays as authored when it does not. #}
+    <p class="muted small">{{ t('guide.rendered_from', path=guide.source) }}</p>
+    <article class="prose">
+      {{ body.html | safe }}
+    </article>
+  </div>
+
+  <aside class="guide-side">
+    <section>
+      <h4>{{ docs_nav_label }}</h4>
+      <ul class="side-links">
+        {% for g in site.guides %}
+        <li><a href="{{ root }}docs/{{ g.slug }}/{{ page_suffix }}" class="{{ 'on' if g.slug == guide.slug }}">{{ docs_titles.get(g.slug, g.title) }}</a></li>
+        {% endfor %}
+        {# About belongs in this list as well as in the nav: from inside the
+           docs it reads as one more thing to know about the index. #}
+        <li><a href="{{ root }}about/{{ page_suffix }}">{{ t('about.title') }}</a></li>
+      </ul>
+    </section>
+
+    {% if body.toc %}
+    <section>
+      <h4>{{ t('guide.on_this_page') }}</h4>
+      <ul class="toc">
+        {% for item in body.toc %}
+        <li class="toc-h{{ item.level }}"><a href="#{{ item.anchor }}">{{ item.title }}</a></li>
+        {% endfor %}
+      </ul>
+    </section>
+    {% endif %}
+  </aside>
+</div>
+{% endblock %}

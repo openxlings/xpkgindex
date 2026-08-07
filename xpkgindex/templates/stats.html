@@ -1,0 +1,60 @@
+{% extends "base.html" %}
+{% import "_macros.html" as m with context %}
+{% block title %}{{ t('stats.title') }} · {{ config.title | loc }}{% endblock %}
+{% block description %}How this package index has grown over time.{% endblock %}
+
+{% block content %}
+<h1 class="page-title">{{ t('stats.title') }}</h1>
+
+<div class="stat-row big">
+  <span><b>{{ stats.packages }}</b> {{ t('stat.packages') }}</span>
+  <span><b>{{ stats.namespaces }}</b> {{ t('stat.namespaces') }}</span>
+  <span><b>{{ stats.versions }}</b> {{ t('stat.versions') }}</span>
+</div>
+
+{% if growth %}
+<section class="blk">
+  <h3>{{ t('stats.over_time') }}</h3>
+  {{ m.chart(growth) }}
+  <p class="muted small">{{ t('stats.replayed', start=growth.first_date, end=growth.last_date) }}</p>
+</section>
+{% else %}
+<p class="callout">{{ t('stats.no_git') }}</p>
+{% endif %}
+
+<section class="blk">
+  <h3>{{ t('stats.composition') }}</h3>
+  <div class="bars">
+    {% set top = by_namespace[0][1] if by_namespace else 1 %}
+    {% for ns, count in by_namespace %}
+    <div class="bar-row">
+      <span class="bar-label"><code>{{ ns }}</code></span>
+      <span class="bar"><span class="bar-fill" style="width: {{ (count * 100 / top) | round(1) }}%"></span></span>
+      <span class="bar-n">{{ count }}</span>
+    </div>
+    {% endfor %}
+  </div>
+</section>
+
+{% if history %}
+<section class="blk">
+  <h3>{{ t('stats.history') }}</h3>
+  {# The full stream, repeats and all: a bump day genuinely touched several
+     descriptors, and that is exactly what this page is for. #}
+  <ol class="timeline">
+    {% for ev in history %}
+    <li class="tl-{{ ev.kind }}">
+      <span class="tl-date wide">{{ ev.date }} {% if ev.clock %}<i>{{ ev.clock }}</i>{% endif %}</span>
+      <span class="tl-body">
+        {% if ev.slug %}<a href="{{ root }}packages/{{ ev.slug }}/{{ page_suffix }}"><code>{{ ev.display }}</code></a>
+        {% else %}<code>{{ ev.display }}</code>{% endif %}
+        <span class="tl-kind">{{ t('kind.' ~ ev.kind) }}</span>
+        {% if ev.by %}<span class="tl-by">{{ ev.by }}</span>{% endif %}
+        {% if ev.subject %}<span class="tl-subject">{{ ev.subject }}</span>{% endif %}
+      </span>
+    </li>
+    {% endfor %}
+  </ol>
+</section>
+{% endif %}
+{% endblock %}

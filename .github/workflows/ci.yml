@@ -1,0 +1,81 @@
+name: ci
+
+# The framework has no packages of its own, so the tests are the whole safety
+# net: they build throwaway index repositories — real descriptors, real git
+# history — and assert on the generated site. Every consumer index installs
+# this straight from the default branch, so a red main breaks their deploys,
+# not just ours.
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        # The floor from pyproject and the version the consumer workflows pin,
+        # so both ends of the supported range are exercised.
+        python: ['3.9', '3.12', '3.13']
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python }}
+      - run: pip install -e ".[dev]"
+      - name: Tests
+        run: pytest -q
+      - name: The CLI starts
+        run: |
+          xpkgindex --version
+          xpkgindex generate --help > /dev/null
+
+  end-to-end:
+    # A real index repository, built offline, in every configured locale — the
+    # tests cover the pipeline, this covers the thing consumers actually run.
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: pip install -e "."
+      - name: Check out a consumer index
+        uses: actions/checkout@v4
+        with:
+          repository: openxlings/xim-pkgindex
+          path: consumer
+          fetch-depth: 0        # the growth curve replays the whole log
+      - name: Build it
+        run: xpkgindex generate consumer --output /tmp/site --offline
+      - name: The site is complete
+        run: |
+          set -e
+          for f in index.html index.json search-index.json sitemap.xml feed.xml \
+                   stats/index.html contributors/index.html about/index.html; do
+            test -s "/tmp/site/$f" || { echo "missing: $f"; exit 1; }
+          done
+          python - <<'PY'
+          import json, sys
+          data = json.load(open("/tmp/site/index.json", encoding="utf-8"))
+          assert data["schema"] == 1, data["schema"]
+          assert data["stats"]["packages"] > 0, "no packages"
+          # schema 1 promises strings; per-locale maps must be flattened here
+          for facet in data["facets"]:
+              assert isinstance(facet["label"], str), facet
+          print(f'{data["stats"]["packages"]} packages, {len(data["facets"])} facet axes')
+          PY
+
+  docs:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Links and anchors resolve
+        run: python tools/check-doc-links.py

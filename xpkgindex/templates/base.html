@@ -1,146 +1,216 @@
-{# Bootstrap Icons (MIT License) - https://icons.getbootstrap.com #}
-{% macro icon_linux(size=16) %}
-<svg class="platform-icon" width="{{ size }}" height="{{ size }}" viewBox="0 0 16 16" fill="currentColor"><path d="M8.996 4.497c.104-.076.1-.168.186-.158s.022.102-.098.207c-.12.104-.308.243-.46.323-.291.152-.631.336-.993.336s-.647-.167-.853-.33c-.102-.082-.186-.162-.248-.221-.11-.086-.096-.207-.052-.204.075.01.087.109.134.153.064.06.144.137.241.214.195.154.454.304.778.304s.702-.19.932-.32c.13-.073.297-.204.433-.304M7.34 3.781c.055-.02.123-.031.174-.003.011.006.024.021.02.034-.012.038-.074.032-.11.05-.032.017-.057.052-.093.054-.034 0-.086-.012-.09-.046-.007-.044.058-.072.1-.089m.581-.003c.05-.028.119-.018.173.003.041.017.106.045.1.09-.004.033-.057.046-.09.045-.036-.002-.062-.037-.093-.053-.036-.019-.098-.013-.11-.051-.004-.013.008-.028.02-.034"/><path fill-rule="evenodd" d="M8.446.019c2.521.003 2.38 2.66 2.364 4.093-.01.939.509 1.574 1.04 2.244.474.56 1.095 1.38 1.45 2.32.29.765.402 1.613.115 2.465a.8.8 0 0 1 .254.152l.001.002c.207.175.271.447.329.698.058.252.112.488.224.615.344.382.494.667.48.922-.015.254-.203.43-.435.57-.465.28-1.164.491-1.586 1.002-.443.527-.99.83-1.505.871a1.25 1.25 0 0 1-1.256-.716v-.001a1 1 0 0 1-.078-.21c-.67.038-1.252-.165-1.718-.128-.687.038-1.116.204-1.506.206-.151.331-.445.547-.808.63-.5.114-1.126 0-1.743-.324-.577-.306-1.31-.278-1.85-.39-.27-.057-.51-.157-.626-.384-.116-.226-.095-.538.07-.988.051-.16.012-.398-.026-.648a2.5 2.5 0 0 1-.037-.369c0-.133.022-.265.087-.386v-.002c.14-.266.368-.377.577-.451s.397-.125.53-.258c.143-.15.27-.374.443-.56q.036-.037.073-.07c-.081-.538.007-1.105.192-1.662.393-1.18 1.223-2.314 1.811-3.014.502-.713.65-1.287.701-2.016.042-.997-.705-3.974 2.112-4.2q.168-.015.321-.013"/></svg>
-{% endmacro %}
-
-{% macro icon_windows(size=16) %}
-<svg class="platform-icon" width="{{ size }}" height="{{ size }}" viewBox="0 0 16 16" fill="currentColor"><path d="M6.555 1.375 0 2.237v5.45h6.555zM0 13.795l6.555.933V8.313H0zm7.278-5.4.026 6.378L16 16V8.395zM16 0 7.33 1.244v6.414H16z"/></svg>
-{% endmacro %}
-
-{% macro icon_macos(size=16) %}
-<svg class="platform-icon" width="{{ size }}" height="{{ size }}" viewBox="0 0 16 16" fill="currentColor"><path d="M11.182.008C11.148-.03 9.923.023 8.857 1.18c-1.066 1.156-.902 2.482-.878 2.516s1.52.087 2.475-1.258.762-2.391.728-2.43m3.314 11.733c-.048-.096-2.325-1.234-2.113-3.422s1.675-2.789 1.698-2.854-.597-.79-1.254-1.157a3.7 3.7 0 0 0-1.563-.434c-.108-.003-.483-.095-1.254.116-.508.139-1.653.589-1.968.607-.316.018-1.256-.522-2.267-.665-.647-.125-1.333.131-1.824.328-.49.196-1.422.754-2.074 2.237-.652 1.482-.311 3.83-.067 4.56s.625 1.924 1.273 2.796c.576.984 1.34 1.667 1.659 1.899s1.219.386 1.843.067c.502-.308 1.408-.485 1.766-.472.357.013 1.061.154 1.782.539.571.197 1.111.115 1.652-.105.541-.221 1.324-1.059 2.238-2.758q.52-1.185.473-1.282"/></svg>
-{% endmacro %}
-
 <!DOCTYPE html>
-<html lang="en" data-theme="{{ config.style }}">
+<html lang="{{ html_lang }}" data-lang="{{ lang }}" data-density="{{ config.density }}">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{% block title %}{{ config.title }}{% endblock %}</title>
-    <meta name="description" content="{{ config.description }}">
-    <meta name="color-scheme" content="dark light">
-    {% set base = '.' if current_page in ('home', 'about') else '..' %}
-    <link rel="stylesheet" href="{{ base }}/static/css/style.css">
-    {% block head %}{% endblock %}
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>{% block title %}{{ config.title | loc }}{% endblock %}</title>
+<meta name="description" content="{% block description %}{{ config.description | loc }}{% endblock %}">
+<meta property="og:title" content="{{ self.title() }}">
+<meta property="og:description" content="{{ self.description() }}">
+<meta property="og:type" content="website">
+<meta name="twitter:card" content="summary">
+{% for l in languages %}
+<link rel="alternate" hreflang="{{ l.code }}" href="{{ l.url }}">
+{% endfor %}
+<link rel="stylesheet" href="{{ site_root }}static/css/site.css?v={{ asset_v }}">
+{# theme.css is generated from the site config and loaded last so a consumer
+   index can re-tone the design system without editing it. #}
+<link rel="stylesheet" href="{{ site_root }}static/css/theme.css?v={{ asset_v }}">
+<script>
+  // Both run before first paint: the page must never flash the wrong theme,
+  // and a language redirect must happen before anything is rendered.
+  (function () {
+    try {
+      var pref = localStorage.getItem('xpi-theme');
+      var fixed = {{ ('"' + config.style + '"') if config.style in ('light', 'dark') else 'null' }};
+      document.documentElement.dataset.theme = pref || fixed ||
+        (matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+    } catch (e) { /* private mode: fall through to the served markup */ }
+
+    // Send a visitor to the locale their browser asks for — but only until
+    // they choose one themselves, after which the choice sticks across pages
+    // and overrides the browser. Alternates come from the hreflang links, so
+    // this needs no separate list to keep in sync.
+    try {
+      var alts = {};
+      document.querySelectorAll('link[rel="alternate"][hreflang]').forEach(function (l) {
+        alts[l.getAttribute('hreflang')] = l.getAttribute('href');
+      });
+      var current = document.documentElement.getAttribute('data-lang');
+      var chosen = localStorage.getItem('xpi-lang');
+      var want = chosen;
+
+      if (!want) {
+        var codes = Object.keys(alts);
+        var aliases = { 'zh-cn': 'zh', 'zh-hans': 'zh', 'zh-sg': 'zh',
+                        'zh-tw': 'zh-Hant', 'zh-hk': 'zh-Hant', 'zh-mo': 'zh-Hant' };
+        var wanted = navigator.languages || [navigator.language || ''];
+        for (var i = 0; i < wanted.length && !want; i++) {
+          var tag = String(wanted[i]);
+          var candidates = [tag, aliases[tag.toLowerCase()], tag.split('-')[0]];
+          for (var j = 0; j < candidates.length; j++) {
+            if (candidates[j] && codes.indexOf(candidates[j]) !== -1) { want = candidates[j]; break; }
+          }
+        }
+      }
+      if (want && want !== current && alts[want]) {
+        location.replace(alts[want] + location.search + location.hash);
+      }
+    } catch (e) { /* stay on the served locale */ }
+  })();
+</script>
 </head>
 <body>
-    <nav class="navbar">
-        <div class="nav-inner">
-            <a href="{{ base }}/index.html" class="nav-logo">{{ config.logo }}</a>
+<a class="skip" href="#main">{{ t('nav.skip') }}</a>
 
-            <div class="nav-search">
-                <input type="text" id="nav-search-input" placeholder="Search packages&hellip;" autocomplete="off" aria-label="Search packages">
-                <div class="search-dropdown" id="search-dropdown"></div>
-            </div>
+<header class="topbar">
+  <div class="wrap topbar-inner">
+    <a class="brand" href="{{ root }}{{ page_suffix }}">{{ config.logo | loc }}</a>
 
-            {# Desktop nav actions #}
-            <div class="nav-actions nav-desktop">
-                {% if current_page == 'home' %}
-                <div class="platform-dropdown" id="platform-dropdown">
-                    <button class="platform-dropdown-btn" id="platform-dropdown-btn" aria-label="Filter by platform" aria-expanded="false">
-                        <span class="platform-dropdown-icon" id="platform-dropdown-icon">{{ icon_linux(14) }}</span>
-                        <span class="platform-dropdown-label" id="platform-dropdown-label">All</span>
-                        <svg class="chevron-icon" width="10" height="10" viewBox="0 0 16 16" fill="currentColor"><path fill-rule="evenodd" d="M1.646 4.646a.5.5 0 0 1 .708 0L8 10.293l5.646-5.647a.5.5 0 0 1 .708.708l-6 6a.5.5 0 0 1-.708 0l-6-6a.5.5 0 0 1 0-.708"/></svg>
-                    </button>
-                    <div class="platform-dropdown-menu" id="platform-dropdown-menu">
-                        <button class="platform-dropdown-item active" data-platform="all">All Platforms</button>
-                        <button class="platform-dropdown-item" data-platform="linux">{{ icon_linux(14) }} Linux</button>
-                        <button class="platform-dropdown-item" data-platform="windows">{{ icon_windows(14) }} Windows</button>
-                        <button class="platform-dropdown-item" data-platform="macosx">{{ icon_macos(14) }} macOS</button>
-                    </div>
-                </div>
-                {% endif %}
-                <button id="theme-toggle" class="btn-icon" title="Toggle theme" aria-label="Toggle theme">
-                    <span class="icon-sun">&#9728;</span>
-                    <span class="icon-moon">&#9790;</span>
-                </button>
-                {% if config.github %}
-                <a href="{{ config.github }}" class="btn-icon" title="GitHub" aria-label="GitHub" target="_blank" rel="noopener">
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z"/></svg>
-                </a>
-                {% endif %}
-                {% if config.forum %}
-                <a href="{{ config.forum }}" class="btn-icon" title="Forum" aria-label="Forum" target="_blank" rel="noopener">
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M20 2H4c-1.1 0-2 .9-2 2v18l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zm0 14H6l-2 2V4h16v12z"/></svg>
-                </a>
-                {% endif %}
-                <a href="{{ base }}/about.html" class="nav-link">About</a>
-            </div>
-
-            {# Mobile: platform icon + hamburger #}
-            <div class="nav-mobile-actions">
-                {% if current_page == 'home' %}
-                <div class="platform-dropdown" id="platform-dropdown-mobile">
-                    <button class="platform-dropdown-btn" id="platform-dropdown-btn-mobile" aria-label="Filter by platform" aria-expanded="false">
-                        <span class="platform-dropdown-icon" id="platform-dropdown-icon-mobile">{{ icon_linux(14) }}</span>
-                    </button>
-                    <div class="platform-dropdown-menu" id="platform-dropdown-menu-mobile">
-                        <button class="platform-dropdown-item active" data-platform="all">All Platforms</button>
-                        <button class="platform-dropdown-item" data-platform="linux">{{ icon_linux(14) }} Linux</button>
-                        <button class="platform-dropdown-item" data-platform="windows">{{ icon_windows(14) }} Windows</button>
-                        <button class="platform-dropdown-item" data-platform="macosx">{{ icon_macos(14) }} macOS</button>
-                    </div>
-                </div>
-                {% endif %}
-                <button class="btn-icon nav-menu-toggle" id="nav-menu-toggle" aria-label="Menu" aria-expanded="false">
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M3 18h18v-2H3v2zm0-5h18v-2H3v2zm0-7v2h18V6H3z"/></svg>
-                </button>
-            </div>
-
-            {# Mobile dropdown menu #}
-            <div class="nav-mobile-menu" id="nav-mobile-menu">
-                <div class="nav-mobile-search">
-                    <input type="text" id="nav-mobile-search-input" placeholder="Search packages&hellip;" autocomplete="off" aria-label="Search packages">
-                    <div class="search-dropdown" id="search-dropdown-mobile"></div>
-                </div>
-                <div class="nav-mobile-links">
-                    <button id="theme-toggle-mobile" class="nav-mobile-item" aria-label="Toggle theme">
-                        <span class="icon-sun">&#9728;</span>
-                        <span class="icon-moon">&#9790;</span>
-                        <span>Theme</span>
-                    </button>
-                    {% if config.github %}
-                    <a href="{{ config.github }}" class="nav-mobile-item" target="_blank" rel="noopener">
-                        <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z"/></svg>
-                        GitHub
-                    </a>
-                    {% endif %}
-                    {% if config.forum %}
-                    <a href="{{ config.forum }}" class="nav-mobile-item" target="_blank" rel="noopener">
-                        <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M20 2H4c-1.1 0-2 .9-2 2v18l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zm0 14H6l-2 2V4h16v12z"/></svg>
-                        Forum
-                    </a>
-                    {% endif %}
-                    <a href="{{ base }}/about.html" class="nav-mobile-item">About</a>
-                </div>
-            </div>
+    {# On a phone the nav collapses into this button's panel. The wrapper is
+       `display: contents` on wider screens, so the nav stays an ordinary flex
+       item of the header and nothing about the desktop layout changes. #}
+    <div class="nav-wrap">
+      <button class="icon-btn nav-trigger" type="button" aria-haspopup="true"
+              aria-label="{{ t('nav.menu') }}" title="{{ t('nav.menu') }}">
+        <svg viewBox="0 0 16 16" width="16" height="16" aria-hidden="true">
+          <path fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"
+                d="M2 4h12M2 8h12M2 12h12"/>
+        </svg>
+      </button>
+      {# On a phone this whole group is the panel; on wider screens it is
+         `display: contents` and its children lay out in the header itself. #}
+      <div class="nav-panel">
+      <nav class="nav">
+      <a href="{{ root }}{{ page_suffix }}" class="{{ 'on' if page in ('home', 'packages') }}">{{ t('nav.packages') }}</a>
+      <a href="{{ root }}stats/{{ page_suffix }}" class="{{ 'on' if page == 'stats' }}">{{ t('nav.stats') }}</a>
+      <a href="{{ root }}contributors/{{ page_suffix }}" class="{{ 'on' if page == 'contributors' }}">{{ t('nav.contributors') }}</a>
+      {# More than one document: the nav item still navigates (to the landing
+         doc), and hovering or focusing it reveals the rest. A menu that only
+         opened on hover would be unreachable by keyboard and on touch. #}
+      {% if docs_home %}
+      <div class="nav-item{{ ' has-menu' if site.guides | length > 1 }}">
+        <a href="{{ root }}docs/{{ docs_home }}/{{ page_suffix }}" class="{{ 'on' if page == 'docs' }}"
+           {% if site.guides | length > 1 %}aria-haspopup="true"{% endif %}>
+          {{ docs_nav_label }}
+          {% if site.guides | length > 1 %}
+          <svg class="nav-caret" viewBox="0 0 10 10" width="8" height="8" aria-hidden="true">
+            <path fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"
+                  stroke-linejoin="round" d="m2 4 3 3 3-3"/>
+          </svg>
+          {% endif %}
+        </a>
+        {% if site.guides | length > 1 %}
+        <div class="nav-menu menu-pop">
+          {% for g in site.guides %}
+          <a href="{{ root }}docs/{{ g.slug }}/{{ page_suffix }}">{{ docs_titles.get(g.slug, g.title) }}</a>
+          {% endfor %}
         </div>
-    </nav>
+        {% endif %}
+      </div>
+      {% endif %}
+      {# About keeps its own nav slot as well as its entry under Docs: it is
+         where people look for "what is this index", not a document. #}
+      <a href="{{ root }}about/{{ page_suffix }}" class="{{ 'on' if page == 'about' }}">{{ t('nav.about') }}</a>
+      </nav>
 
-    <main class="main-content">
-        {% block content %}{% endblock %}
-    </main>
+      <div class="topbar-right">
+      {# Suggestions come from search-index.json and Enter opens the best
+         match. The old form posted to the homepage, which meant searching
+         from a package page threw away the page you were on. #}
+      <form class="search" action="{{ root }}{{ page_suffix }}" method="get" role="search">
+        <input type="search" name="q" id="q" placeholder="{{ t('nav.search') }}"
+               aria-label="{{ t('nav.search') }}" autocomplete="off"
+               role="combobox" aria-autocomplete="list" aria-expanded="false"
+               aria-controls="search-results"
+               data-index="{{ site_root }}search-index.json"
+               data-packages="{{ root }}packages/"
+               {# the search builds `<base><slug>/<suffix>` itself #}
+               data-page-suffix="{{ page_suffix }}">
+        <div class="search-results" id="search-results" role="listbox" hidden></div>
+      </form>
 
-    <footer class="footer">
-        <div class="footer-inner">
-            <span class="footer-powered">Powered by <a href="https://github.com/openxlings/xpkgindex" target="_blank" rel="noopener">xpkgindex</a></span>
-            <div class="footer-links">
-                {% if config.docs_url %}
-                <a href="{{ config.docs_url }}" target="_blank" rel="noopener">Docs</a>
-                {% endif %}
-                {% if config.github %}
-                <a href="{{ config.github }}" target="_blank" rel="noopener">GitHub</a>
-                {% endif %}
-                {% for link in config.custom_links %}
-                <a href="{{ link.url }}" target="_blank" rel="noopener">{{ link.label }}</a>
-                {% endfor %}
-            </div>
+      <div class="icon-links">
+        {% if config.github %}
+        <a class="icon-btn" href="{{ config.github }}" title="{{ t('nav.repository') }}"
+           aria-label="{{ t('nav.repository') }}" rel="noopener">
+          <svg viewBox="0 0 16 16" width="16" height="16" aria-hidden="true"><path fill="currentColor" d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27s1.36.09 2 .27c1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.01 8.01 0 0 0 16 8c0-4.42-3.58-8-8-8"/></svg>
+        </a>
+        {% endif %}
+        {% if config.website %}
+        <a class="icon-btn" href="{{ config.website }}" title="{{ t('nav.website') }}"
+           aria-label="{{ t('nav.website') }}" rel="noopener">
+          <svg viewBox="0 0 16 16" width="15" height="15" aria-hidden="true"><path fill="currentColor" d="M8 0a8 8 0 1 0 0 16A8 8 0 0 0 8 0M5.78 1.66A12 12 0 0 0 4.5 5H2.25a7.02 7.02 0 0 1 3.53-3.34M1.6 6h2.72a15 15 0 0 0 0 4H1.6a7 7 0 0 1 0-4m.65 5H4.5c.3 1.2.73 2.34 1.28 3.34A7.02 7.02 0 0 1 2.25 11M7.5 14.6c-.72-.6-1.5-1.9-1.95-3.6H7.5zm0-4.6H5.32a13.6 13.6 0 0 1 0-4H7.5zm0-5H5.55C6 3.3 6.78 2 7.5 1.4zm6.25 0H11.5a12 12 0 0 0-1.28-3.34A7.02 7.02 0 0 1 13.75 5M8.5 1.4c.72.6 1.5 1.9 1.95 3.6H8.5zm0 4.6h2.18a13.6 13.6 0 0 1 0 4H8.5zm0 8.6V11h1.95c-.45 1.7-1.23 3-1.95 3.6m1.72-.26c.55-1 .98-2.14 1.28-3.34h2.25a7.02 7.02 0 0 1-3.53 3.34M14.4 10h-2.72a15 15 0 0 0 0-4h2.72a7 7 0 0 1 0 4"/></svg>
+        </a>
+        {% endif %}
+        {% if config.forum %}
+        <a class="icon-btn" href="{{ config.forum }}" title="{{ t('nav.forum') }}"
+           aria-label="{{ t('nav.forum') }}" rel="noopener">
+          <svg viewBox="0 0 16 16" width="16" height="16" aria-hidden="true"><path fill="currentColor" d="M2.5 2h11A1.5 1.5 0 0 1 15 3.5v7a1.5 1.5 0 0 1-1.5 1.5H6.6l-3.1 2.6A.5.5 0 0 1 2.7 14v-2H2.5A1.5 1.5 0 0 1 1 10.5v-7A1.5 1.5 0 0 1 2.5 2m0 1a.5.5 0 0 0-.5.5v7c0 .28.22.5.5.5h.7a.5.5 0 0 1 .5.5v1.44l2.38-2a.5.5 0 0 1 .32-.12h7.1a.5.5 0 0 0 .5-.5v-7a.5.5 0 0 0-.5-.5z"/></svg>
+        </a>
+        {% endif %}
+        {% if config.docs_url %}
+        <a class="icon-btn" href="{{ config.docs_url }}" title="{{ t('nav.docs') }}"
+           aria-label="{{ t('nav.docs') }}" rel="noopener">
+          <svg viewBox="0 0 16 16" width="16" height="16" aria-hidden="true"><path fill="currentColor" d="M1 2.83c.89-.37 2.16-.77 3.39-.9 1.33-.13 2.46.07 3.11.76v9.75c-.93-.53-2.12-.6-3.21-.5-1.18.12-2.37.47-3.29.82zm7.5-.14c.65-.69 1.78-.89 3.11-.76 1.24.13 2.5.53 3.39.9v9.92c-.92-.35-2.11-.7-3.29-.81-1.09-.11-2.28-.04-3.21.49zM8 1.78C7.02.94 5.59.81 4.29.94 2.77 1.09 1.24 1.61.29 2.05A.5.5 0 0 0 0 2.5v11a.5.5 0 0 0 .71.46c.88-.4 2.3-.89 3.68-1.03 1.4-.14 2.59.09 3.22.88a.5.5 0 0 0 .78 0c.63-.79 1.81-1.02 3.22-.88 1.38.14 2.8.63 3.68 1.03A.5.5 0 0 0 16 13.5v-11a.5.5 0 0 0-.29-.45c-.95-.44-2.48-.96-4-1.11C10.41.81 8.99.94 8 1.78"/></svg>
+        </a>
+        {% endif %}
+      </div>
+
+      {# Same affordance as the Docs menu: opens on hover, and on focus so it
+         is reachable by keyboard and by tap where there is no hover. #}
+      {% if languages | length > 1 %}
+      <div class="lang has-menu">
+        <button class="lang-trigger" type="button" aria-haspopup="true"
+                title="{{ t('nav.language') }}" aria-label="{{ t('nav.language') }}">
+          <svg viewBox="0 0 24 24" width="15" height="15" aria-hidden="true"><path fill="currentColor" d="M12.87 15.07l-2.54-2.51.03-.03A17.5 17.5 0 0 0 14.07 6H17V4h-7V2H8v2H1v2h11.17C11.5 7.92 10.44 9.75 9 11.35 8.07 10.32 7.3 9.19 6.69 8h-2c.73 1.63 1.73 3.17 2.98 4.56l-5.09 5.02L4 19l5-5 3.11 3.11.76-2.04zM18.5 10h-2L12 22h2l1.12-3h4.75L21 22h2l-4.5-12zm-2.62 7l1.62-4.33L19.12 17h-3.24z"/></svg>
+          <span>{{ lang }}</span>
+        </button>
+        <div class="lang-menu menu-pop">
+          {% for l in languages %}
+          <a href="{{ l.url }}" class="{{ 'on' if l.current }}" hreflang="{{ l.code }}">{{ l.name }}</a>
+          {% endfor %}
         </div>
-    </footer>
+      </div>
+      {% endif %}
 
-    <script src="{{ base }}/static/js/theme.js"></script>
-    <script src="{{ base }}/static/js/clipboard.js"></script>
-    <script src="{{ base }}/static/js/search.js"></script>
-    {% block scripts %}{% endblock %}
+      <button class="icon-btn theme-toggle" type="button" aria-label="{{ t('nav.theme') }}" title="{{ t('nav.theme') }}">
+        <svg viewBox="0 0 16 16" width="15" height="15" aria-hidden="true"><path fill="currentColor" d="M8 11a3 3 0 1 1 0-6 3 3 0 0 1 0 6zm0 1.5A4.5 4.5 0 1 0 8 3.5a4.5 4.5 0 0 0 0 9zM8 0h.01v2H8V0zm0 14h.01v2H8v-2zM0 8v.01h2V8H0zm14 0v.01h2V8h-2zM2.34 2.34l1.41 1.41-.7.7-1.42-1.4.71-.71zm9.91 9.91 1.41 1.41-.7.71-1.42-1.41.71-.71zm1.41-9.91.71.71-1.41 1.41-.71-.7 1.41-1.42zM3.05 12.25l.7.71-1.4 1.41-.71-.7 1.41-1.42z"/></svg>
+      </button>
+      </div>
+      </div>
+    </div>
+  </div>
+</header>
+
+<main id="main" class="wrap">
+{% block content %}{% endblock %}
+</main>
+
+<footer class="footer">
+  <div class="wrap footer-inner">
+    <div>
+      <strong>{{ config.title | loc }}</strong>
+      {% if config.description %}<span class="muted"> — {{ config.description | loc }}</span>{% endif %}
+    </div>
+    <div class="footer-links">
+      {% if config.github %}<a href="{{ config.github }}">{{ t('nav.repository') }}</a>{% endif %}
+      {% if config.project_url %}<a href="{{ config.project_url }}">{{ config.project_name | loc }}</a>{% endif %}
+      {% for link in config.custom_links %}<a href="{{ link.url }}">{{ link.label | loc }}</a>{% endfor %}
+      <a href="{{ site_root }}index.json">index.json</a>
+      <a href="{{ site_root }}feed.xml">Feed</a>
+    </div>
+    {% if site.build.time or site.build.commit %}
+    <div class="muted small">
+      {{ t('about.build') }} {{ site.build.time }}
+      {% if site.build.commit %}
+        · <a href="{{ site.build.commit_url or '#' }}"><code>{{ site.build.commit[:7] }}</code></a>
+      {% endif %}
+    </div>
+    {% endif %}
+  </div>
+</footer>
+
+<script src="{{ site_root }}static/js/site.js?v={{ asset_v }}"></script>
 </body>
 </html>

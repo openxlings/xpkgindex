@@ -1,0 +1,92 @@
+{% extends "base.html" %}
+{% import "_macros.html" as m with context %}
+{% block title %}{{ t('con.title') }} · {{ config.title | loc }}{% endblock %}
+{% block description %}Who maintains the descriptors, who wrote the libraries upstream, and who builds the ecosystem.{% endblock %}
+
+{% block content %}
+<h1 class="page-title">{{ t('con.title') }}</h1>
+
+{# ------------------------------------------------ 1. index contributors #}
+<section class="blk">
+  <h3>{{ t('con.index') }}</h3>
+  <p class="blk-caption">{{ t('con.index_caption', dir=config.pkgs_dir) }}</p>
+  {% if site.contributors %}
+  <div class="people">
+    {% for p in site.contributors %}
+    <div class="person">
+      {{ m.avatar(p, 36) }}
+      <div class="person-body">
+        <a class="person-name" {% if p.url %}href="{{ p.url }}"{% endif %}>{{ p.label }}</a>
+        <div class="person-sub">
+          {{ p.commits }} {{ t.plural(p.commits, 'con.commits') }} ·
+          {{ p.packages | length }} {{ t.plural(p.packages | length, 'con.packages') }}
+        </div>
+        {% if p.packages %}
+        <div class="person-pkgs">
+          {% for slug in p.packages[:3] %}
+          <a href="{{ root }}packages/{{ slug }}/{{ page_suffix }}"><code>{{ slug }}</code></a>
+          {% endfor %}
+          {% if p.packages | length > 3 %}<span class="muted">+{{ p.packages | length - 3 }}</span>{% endif %}
+        </div>
+        {% endif %}
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+  {% else %}
+  <p class="callout">{{ t('con.no_git') }}</p>
+  {% endif %}
+</section>
+
+{# ---------------------------------------------------- 2. upstream thanks #}
+<section class="blk">
+  <h3>{{ t('con.upstream') }}</h3>
+  <p class="blk-caption">
+    {{ t('con.upstream_caption', project=config.project_name | loc or config.title | loc) }}<br>
+    {{ t('con.upstream_count', packages=stats.packages, upstreams=upstreams | length) }}
+  </p>
+  <div class="orgs">
+    {% for u in upstreams %}
+    <a class="org" href="{{ u.url }}" title="{{ u.description }}">
+      {% if u.avatar %}
+      <img class="av" src="{{ u.avatar }}" width="26" height="26" alt="" loading="lazy">
+      {% else %}<span class="av av-blank" aria-hidden="true">{{ u.owner[0] | upper }}</span>{% endif %}
+      <span class="org-name"><code>{{ u.owner }}</code></span>
+      {% if u.stars is not none %}<span class="org-stars">{{ u.stars }}★</span>{% endif %}
+      <span class="org-count">{{ u.packages | length }}</span>
+    </a>
+    {% endfor %}
+  </div>
+  <p class="muted small">{{ t('con.upstream_note') }}</p>
+</section>
+
+{# ------------------------------------------------ 3. ecosystem (union) #}
+{% if site.ecosystem or site.ecosystem_repos or own %}
+<section class="blk">
+  <h3>{{ t('con.ecosystem') }}</h3>
+  <p class="blk-caption">{{ t('con.ecosystem_caption') }}</p>
+  {% if site.ecosystem_repos %}
+  <div class="orgs">
+    {% for r in site.ecosystem_repos %}
+    <a class="org" href="{{ r.url }}">
+      <span class="org-name"><code>{{ r.slug }}</code></span>
+      {% if r.stars is not none %}<span class="org-stars">{{ r.stars }}★</span>{% endif %}
+    </a>
+    {% endfor %}
+  </div>
+  {% endif %}
+  {% if site.ecosystem %}
+  <div class="avatar-wall">
+    {% for p in site.ecosystem[:60] %}
+    <a class="wall-item" {% if p.url %}href="{{ p.url }}"{% endif %}
+       title="{{ p.label }} · {{ p.repos | join(', ') }}">{{ m.avatar(p, 32) }}</a>
+    {% endfor %}
+  </div>
+  {% elif not site.ecosystem_repos %}
+  <p class="callout">{{ t('con.ecosystem_hint') }}</p>
+  {% else %}
+  <p class="callout">{{ t('con.offline') }}</p>
+  {% endif %}
+</section>
+{% endif %}
+{% endblock %}
