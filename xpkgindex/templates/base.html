@@ -22,7 +22,14 @@
   (function () {
     try {
       var pref = localStorage.getItem('xpi-theme');
-      var fixed = {{ ('"' + config.style + '"') if config.style in ('light', 'dark') else 'null' }};
+      {# `tojson`, not a hand-built quoted string: autoescaping applies inside
+         <script> too, so `'"' + style + '"'` reached the page as
+         `var fixed = &#34;dark&#34;;`. HTML entities are not decoded in a
+         classic script, so that is a SyntaxError -- and a syntax error takes
+         the whole IIFE with it, including the language redirect below, which
+         has nothing to do with theming. `tojson` emits `"dark"` or `null` and
+         escapes for a script context. #}
+      var fixed = {{ (config.style if config.style in ('light', 'dark') else None) | tojson }};
       document.documentElement.dataset.theme = pref || fixed ||
         (matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
     } catch (e) { /* private mode: fall through to the served markup */ }
