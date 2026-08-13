@@ -52,6 +52,10 @@ def _env(lang: str = i18n.DEFAULT, default: str = i18n.DEFAULT) -> Environment:
         lstrip_blocks=True,
     )
     env.filters["platform_label"] = lambda p: PLATFORM_LABELS.get(p, p)
+    # Facets are multi-valued by contract: build.py filters them with
+    # `str(value).split()`. Templates must split the same way, or a two-value
+    # facet renders as one blob -- "tui web-ui" reading as a single odd token.
+    env.filters["split_facet"] = lambda v: str(v).split()
     # `loc` unwraps any consumer- or plugin-supplied value that was written
     # per locale. Applied wherever such text reaches a template.
     env.filters["loc"] = lambda v: i18n.localize(v, lang, default)

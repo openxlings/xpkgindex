@@ -103,7 +103,11 @@
         {% for key, value in pkg.facets.items() %}
         <dt>{{ key }}</dt>
         <dd>
-          {{ value }}
+          {# A facet is multi-valued by contract -- build.py filters with
+             `str(value).split()`. Rendering it as one blob printed
+             "tui web-ui" as if it were a single odd token, so split it here
+             the same way it is split there. One value stays one chip. #}
+          {% for v in value | string | split_facet %}<span class="plat">{{ v }}</span>{% endfor %}
           {% if key == 'namespace' and pkg.namespace_implicit %}
           <span class="muted small" title="{{ t('pkg.index_default_hint') }}">{{ t('pkg.index_default') }}</span>
           {% endif %}
