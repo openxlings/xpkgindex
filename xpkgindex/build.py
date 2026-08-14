@@ -64,8 +64,25 @@ def _check_slugs(packages: List[Package]) -> None:
 
 
 def _install_commands(packages: List[Package], config: SiteConfig) -> None:
+    """Fill in each package's install command, unless its plugin set one.
+
+    The template is an index-wide string, so it can only say the one thing
+    that is true of every package. That is the right default, but it cannot
+    express a command that varies per package -- and in an ecosystem whose
+    own tool installs a package directly, the per-package spec is exactly
+    what the reader needs first (`dsh plugin add <name>@<v>` for one package,
+    `... add github:owner/repo#<sha>` for its unpublished neighbour). Only
+    the plugin knows which.
+
+    So a plugin may claim this line in `on_package`; a package it does not
+    claim still gets the template. Without the check this ran last and
+    silently overwrote the plugin, which reads as the plugin API being
+    ignored rather than as a documented precedence rule.
+    """
     tmpl = config.install_command_template
     for pkg in packages:
+        if pkg.extensions.get("_core", {}).get("install_command"):
+            continue
         version = pkg.latest or "latest"
         try:
             cmd = tmpl.format(ref=pkg.identity.install_ref,
