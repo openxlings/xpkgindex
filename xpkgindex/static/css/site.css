@@ -633,8 +633,17 @@ main.wrap {
 
 .blk { margin-top: 34px; }
 .blk:first-child { margin-top: 0; }
-.blk > .people, .blk > .orgs, .blk > .bars, .blk > .avatar-wall,
-.blk > .timeline, .blk > .table-wrap { margin-top: 12px; }
+/* Block content lives in `.blk-body`, so a rule selecting a direct child of
+   `.blk` matches nothing. These did, once; the wrapper was introduced later
+   and they were left pointing at a structure that no longer exists. The
+   effect was that a titled block had only the h3's 8px under a 10.5px
+   uppercase label, so the heading and its content read as one run-together
+   line -- most visible on a table or a list, where the first row sat flush
+   against the title. */
+.blk > h3 + .blk-body,
+.blk > details > .blk-body { margin-top: 12px; }
+.blk-body > .people, .blk-body > .orgs, .blk-body > .bars,
+.blk-body > .avatar-wall, .blk-body > .timeline { margin-top: 12px; }
 .blk > details > summary { cursor: pointer; list-style: none; }
 .blk > details > summary::-webkit-details-marker { display: none; }
 .blk > details > summary h3 { display: inline; }
