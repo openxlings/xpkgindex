@@ -88,6 +88,37 @@ def test_row_default_falls_back_to_install_command(repo):
     assert row.install == "tool add widget@1.0.0"
 
 
+def test_plugin_may_own_the_install_command(repo):
+    """A per-package install command survives the index-wide template.
+
+    The template runs after every plugin hook, so without an explicit
+    precedence rule it silently overwrote whatever the plugin set -- and a
+    plugin that can shape every other part of the page but not this line has
+    no way to show a spec that differs per package.
+    """
+    plugin = write_plugin(repo, '''
+        from xpkgindex.models import Identity
+        from xpkgindex.plugins import Plugin
+
+        class P(Plugin):
+            name = "installs"
+            def identity(self, raw, path):
+                return Identity.joined(raw.get("namespace", ""), raw.get("name", ""))
+            def on_package(self, pkg, raw):
+                if raw.get("namespace") == "alpha":
+                    pkg.extensions.setdefault("_core", {})["install_command"] = \\
+                        "native add widget#deadbeef"
+    ''')
+    write_config(repo, plugins=[plugin])
+
+    site, _ = build(repo, offline=True)
+    by_ref = {p.identity.install_ref: p for p in site.packages}
+    assert by_ref["alpha.widget"].install_command == "native add widget#deadbeef"
+    # The package the plugin did not claim still gets the template, so opting
+    # one package in does not opt the whole index out.
+    assert by_ref["beta.widget"].install_command == "tool add beta.widget@1.0.0"
+
+
 def test_blocks_and_facets_reach_the_model(repo):
     plugin = write_plugin(repo, '''
         from xpkgindex.models import Block, Facet, FacetValue, Identity
