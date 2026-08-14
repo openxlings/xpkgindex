@@ -319,11 +319,19 @@ main.wrap {
   font-size: 10.5px; letter-spacing: .08em; text-transform: uppercase;
   color: var(--ink-3); font-weight: 600; margin-bottom: 5px;
 }
+/* The top margin is the command's own, not something an ancestor supplies.
+   It used to have none, and got its breathing room from `.iface`
+   (`margin: 16px 0 4px`). An index whose plugin declares no interface line
+   therefore rendered the install command flush against the lede, with the
+   description and the command reading as one run-together block. Consecutive
+   commands stay tight, and inside `.iface` the wrapper still owns the gap. */
 .cmd {
   display: flex; align-items: center; gap: 10px; justify-content: space-between;
   background: var(--bg-code); border: 1px solid var(--line);
-  border-radius: var(--radius-sm); padding: 8px 10px; margin-bottom: 6px;
+  border-radius: var(--radius-sm); padding: 8px 10px; margin: 14px 0 6px;
 }
+.cmd + .cmd { margin-top: 6px; }
+.iface .cmd { margin-top: 0; }
 /* A command is one line at every width. Truncating with an ellipsis beats
    wrapping (a two-line command reads as two commands) and beats a scrollbar
    (you cannot see there is more). The copy button always copies the whole
