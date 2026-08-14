@@ -193,7 +193,16 @@
         <thead><tr>{% for h in b.data.get('head', []) %}<th>{{ h | loc }}</th>{% endfor %}</tr></thead>
         <tbody>
         {% for row in b.data.get('rows', []) %}
-          <tr>{% for cell in row %}<td>{{ cell }}</td>{% endfor %}</tr>
+          <tr>{% for cell in row %}<td>
+            {%- if cell is mapping and cell.get('slug') -%}
+            {# A cell may name a package instead of being flat text, so a
+               plugin's own table can point at the pages this index already
+               has. The plugin supplies the slug; the URL is the core's to
+               build, exactly as it is for `required_by`. #}
+            <a href="{{ root }}packages/{{ cell.slug }}/{{ page_suffix }}">{{ cell.get('text', cell.slug) }}</a>
+            {%- elif cell is mapping -%}{{ cell.get('text', '') }}
+            {%- else -%}{{ cell }}{%- endif -%}
+          </td>{% endfor %}</tr>
         {% endfor %}
         </tbody>
       </table>

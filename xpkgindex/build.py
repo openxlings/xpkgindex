@@ -108,6 +108,10 @@ def _reverse_deps(packages: List[Package]) -> None:
             if target is not None and target is not pkg:
                 if pkg.identity.slug not in target.required_by:
                     target.required_by.append(pkg.identity.slug)
+                # The same edge, pointing the other way. `required_by` was a
+                # link and `dependencies` was inert text, so a relationship
+                # the site had already resolved was only walkable uphill.
+                pkg.dep_slugs[dep] = target.identity.slug
 
 
 def _apply_default_namespace(packages: List[Package], meta: IndexMeta) -> None:

@@ -214,6 +214,9 @@ class Package:
     versions: List[Version] = field(default_factory=list)
     latest: str = ""
     deps: List[str] = field(default_factory=list)
+    # dep string -> slug of the package it resolves to, for deps that name a
+    # package this index carries. Absent for external ones, which stay text.
+    dep_slugs: Dict[str, str] = field(default_factory=dict)
     required_by: List[str] = field(default_factory=list)
 
     facets: Dict[str, str] = field(default_factory=dict)

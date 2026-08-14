@@ -15,7 +15,10 @@
         {% if parts[0] %}<span class="ns">{{ parts[0] }}</span>{% endif %}{{ parts[1] }}
       </h1>
       {% if pkg.interface %}
-      <span class="tone-badge">{{ pkg.interface.data.get('label', pkg.tone) }}</span>
+      {# `| loc` like every other consumer-supplied string: a plugin may hand
+         this a per-locale map, and without the filter the map was printed as
+         its Python repr -- `{'en': 'command', 'zh': '命令'}` in the badge. #}
+      <span class="tone-badge">{{ pkg.interface.data.get('label', pkg.tone) | loc }}</span>
       {% endif %}
       {% if pkg.type and pkg.type != 'package' %}<span class="badge">{{ pkg.type }}</span>{% endif %}
     </header>
@@ -116,7 +119,12 @@
         <dt>{{ t('pkg.dependencies') }}</dt>
         <dd>
           {% if pkg.deps %}
-            {% for d in pkg.deps %}<code class="dep">{{ d }}</code>{% endfor %}
+            {% for d in pkg.deps %}
+              {%- set slug = pkg.dep_slugs.get(d) -%}
+              {%- if slug -%}
+              <a class="dep" href="{{ root }}packages/{{ slug }}/{{ page_suffix }}"><code>{{ d }}</code></a>
+              {%- else -%}<code class="dep">{{ d }}</code>{%- endif -%}
+            {% endfor %}
           {% else %}<span class="muted">{{ t('pkg.none') }}</span>{% endif %}
         </dd>
         <dt>{{ t('pkg.required_by') }}</dt>
