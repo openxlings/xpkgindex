@@ -153,6 +153,7 @@ JavaScript 的访客也能看到全部。
 | `landing` | 导航项和首页卡片指向的那篇文档的 slug |
 | `entries[]` | `{ slug, title, path, translations }` |
 | `entries[].translations` | `{ 语言: 路径 }` —— 正文跟随页头的语言切换器 |
+| `tree` | `{ root, translations, exclude, index_slug }` —— 不逐条列出文档，而是按目录发现：`root`（默认 `docs`）下的每个 `.md`，先是根目录的 `README.md`，其余按文件名排序（章节带编号：编号就是阅读顺序）；每份文档的译文在 `translations[语言]`（如 `{ "zh": "docs/zh" }`）下的同一相对路径。`exclude` 列出 `root` 下要排除的目录；`index_slug` 是根 README 的页面名（默认 `docs-index`）。`entries[]` 已声明的文件保留其声明。缺少译文是警告，`--strict` 下是错误 |
 | `cta` | 首页卡片:`eyebrow`、`title`、`description`、`lines[]`、`action` |
 
 文档自己的 `# H1` 会成为页面标题,并从正文中移除,所以不会出现两次。`title` 是它

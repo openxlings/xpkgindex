@@ -52,7 +52,7 @@ generated 81 packages -> site
 | `--output`, `-o` | Output directory (default `site`) |
 | `--config`, `-c` | Explicit path to `.xpkgindex.json` |
 | `--offline` | Never touch the network; use the committed cache only |
-| `--strict` | Treat reconciliation warnings as errors — use in CI |
+| `--strict` | Treat reconciliation warnings and documentation warnings (a broken link, a missing translation) as errors — use in CI |
 | `--refresh` | Re-fetch every cached upstream lookup, ignoring freshness |
 | `--base-url` | Absolute base URL for `sitemap.xml` and `feed.xml` |
 | `--url-style` | `directory` (default) or `file` — see [Deployment](deployment.md#a-host-that-does-not-resolve-directories) |

@@ -51,7 +51,7 @@ generated 81 packages -> site
 | `--output`、`-o` | 输出目录(默认 `site`) |
 | `--config`、`-c` | 显式指定 `.xpkgindex.json` 路径 |
 | `--offline` | 完全不碰网络,只用已提交的缓存 |
-| `--strict` | 把对账警告当作错误 —— CI 里用 |
+| `--strict` | 把对账警告和文档警告（断链、缺译文）当作错误 —— CI 里用 |
 | `--refresh` | 忽略新鲜度,重新抓取全部缓存条目 |
 | `--base-url` | 供 `sitemap.xml` 和 `feed.xml` 使用的绝对基址 |
 | `--url-style` | `directory`(默认)或 `file` —— 见[部署](deployment.md#不解析目录的宿主) |

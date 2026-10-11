@@ -159,6 +159,7 @@ drift.
 | `landing` | Slug of the doc the nav item and the homepage card point at |
 | `entries[]` | `{ slug, title, path, translations }` |
 | `entries[].translations` | `{ locale: path }` — the body follows the header's language switcher |
+| `tree` | `{ root, translations, exclude, index_slug }` — discover the docs instead of listing them: every `.md` under `root` (default `docs`), the root's `README.md` first and then by name (number your chapters: the number is the reading order), each with its translation at the same relative path under `translations[locale]` (`{ "zh": "docs/zh" }`). `exclude` lists directories under `root` to leave out; `index_slug` names the root README's page (default `docs-index`). A file an `entries[]` item declares keeps that item. A missing translation is a warning, an error under `--strict` |
 | `cta` | The homepage card: `eyebrow`, `title`, `description`, `lines[]`, `action` |
 
 A doc's own `# H1` becomes the page heading and is removed from the body, so it

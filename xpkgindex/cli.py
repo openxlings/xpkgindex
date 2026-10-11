@@ -101,7 +101,7 @@ def main(argv=None) -> int:
         p.add_argument("--offline", action="store_true",
                        help="never touch the network; use the committed cache only")
         p.add_argument("--strict", action="store_true",
-                       help="treat reconciliation warnings as errors (CI)")
+                       help="treat reconciliation and documentation warnings as errors (CI)")
         p.add_argument("--refresh", action="store_true",
                        help="re-fetch every cached upstream lookup, ignoring freshness; "
                             "run this on demand and commit the updated cache")
