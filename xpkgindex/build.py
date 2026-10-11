@@ -393,6 +393,12 @@ def build(root: str, config_path: Optional[str] = None, *,
         root, config.guides, config.page_suffix,
         package_pages={p.source_file: p.url for p in packages},
         repo_url=config.github)
+    gwarn = list(config.docs_tree_warnings) + list(gwarn)
+    # A guide that does not render as written (a broken link, a translation
+    # missing) is an error under --strict, as a growth curve that does not
+    # reconcile is: CI's build is the one that must say so.
+    if strict and gwarn:
+        raise BuildError("documentation:\n  " + "\n  ".join(gwarn))
     site.warnings.extend(gwarn)
 
     site.warnings.extend(host.warnings)

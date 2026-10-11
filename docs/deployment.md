@@ -131,7 +131,8 @@ Run the build on pull requests without publishing:
 `--offline` keeps a PR from spending rate limit and makes the result depend
 only on what is in the repository. `--strict` turns the growth reconciliation
 warning into an error — if the replayed history disagrees with the tree, the
-curve on the site would be wrong, and that is worth failing a build over.
+curve on the site would be wrong, and that is worth failing a build over --
+and so does a documentation warning (a broken link, a missing translation).
 
 Warnings that are not errors are printed by `generate`; a PR check that greps
 its output for `warning:` is a reasonable extra guard.

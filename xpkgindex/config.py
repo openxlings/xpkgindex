@@ -115,6 +115,8 @@ class SiteConfig:
     # language can say so; leaving it out uses the framework's own label.
     guides_nav_label: Any = ""
     guides: List[GuideEntry] = field(default_factory=list)
+    # What discovering `docs.tree` found wrong (a missing translation, ...).
+    docs_tree_warnings: List[str] = field(default_factory=list)
     # The doc a newcomer should read first. Rendered like any other page, but
     # it also becomes the homepage call to action and the Docs nav target.
     docs_landing: str = ""
@@ -201,6 +203,84 @@ def _load_guides(data: Dict[str, Any]) -> (str, List[GuideEntry]):
     return guides.get("nav_label", ""), entries
 
 
+def _discover_tree(root: str, tree: Dict[str, Any], declared: List[GuideEntry]) -> (List[GuideEntry], List[str]):
+    """Every markdown file of a docs tree, as guides (the layout mcpp, xlings
+    and xim-pkgindex share): `<root>/README.md` first, then the numbered
+    chapters and every subdirectory in name order -- the number is the reading
+    order. A translation is the same relative path under its language's
+    directory (`docs/zh/04-x.md` for `docs/04-x.md`). A file an explicit entry
+    already declares keeps that entry -- its slug, its titles -- at its place in
+    the tree: that is how a site that moved to a tree keeps its old URLs.
+
+        "docs": { "tree": { "root": "docs", "translations": { "zh": "docs/zh" },
+                            "exclude": ["specs/legacy"], "untranslated": ["specs"] } }
+
+    `untranslated` names directories under the root written in one language
+    only (normative specifications): their files are pages, and the missing
+    translation is not a warning.
+    """
+    warnings: List[str] = []
+    base = (tree.get("root") or "docs").strip("/")
+    translations = {k: v.strip("/") for k, v in (tree.get("translations") or {}).items()}
+    exclude = [e.strip("/") for e in (tree.get("exclude") or [])]
+    untranslated = [u.strip("/") for u in (tree.get("untranslated") or [])]
+    full = os.path.join(root, base)
+    if not os.path.isdir(full):
+        return [], [f"docs.tree: {base}/ does not exist"]
+    for lang, tdir in translations.items():
+        if not os.path.isdir(os.path.join(root, tdir)):
+            warnings.append(f"docs.tree: the {lang} translations directory {tdir}/ does not exist")
+    by_path = {e.path.replace(os.sep, "/"): e for e in declared}
+    taken = {t.replace(os.sep, "/") for e in declared for t in e.translations.values()}
+    skipped_dirs = {t for t in translations.values()} | {f"{base}/{e}" for e in exclude}
+    found: List[str] = []
+    for dirpath, dirnames, filenames in os.walk(full):
+        rel_dir = os.path.relpath(dirpath, root).replace(os.sep, "/")
+        dirnames[:] = sorted(d for d in dirnames
+                             if f"{rel_dir}/{d}" not in skipped_dirs and not d.startswith("."))
+        for f in sorted(filenames):
+            if f.endswith(".md"):
+                found.append(f"{rel_dir}/{f}")
+
+    def order(path: str):
+        rel = path[len(base) + 1:]
+        parts = rel.split("/")
+        # README first in its directory, then by name.
+        return [(0 if p == "README.md" else 1, p) for p in parts]
+
+    entries: List[GuideEntry] = []
+    for path in sorted(found, key=order):
+        if path in by_path:
+            entries.append(by_path[path])
+            continue
+        if path in taken:
+            continue
+        rel = path[len(base) + 1:]
+        stem = rel[:-3]
+        if stem == "README":
+            slug = tree.get("index_slug") or "docs-index"
+        elif stem.endswith("/README"):
+            slug = stem[: -len("/README")].replace("/", "-")
+        else:
+            slug = stem.replace("/", "-")
+        title = stem.rsplit("/", 1)[-1]
+        with open(os.path.join(root, path), "r", encoding="utf-8", errors="replace") as fh:
+            for line in fh:
+                if line.startswith("# "):
+                    title = line[2:].strip()
+                    break
+        trans = {}
+        one_language = any(rel == u or rel.startswith(u + "/") for u in untranslated)
+        for lang, tdir in ({} if one_language else translations).items():
+            candidate = f"{tdir}/{rel}"
+            if os.path.isfile(os.path.join(root, candidate)):
+                trans[lang] = candidate
+            elif translations:
+                warnings.append(f"docs.tree: {path} has no {lang} translation ({candidate})")
+        entries.append(GuideEntry(slug=slug, title=title, path=path, translations=trans))
+    return entries, warnings
+
+
 def load_config(directory: str, config_path: Optional[str] = None) -> SiteConfig:
     """Load `.xpkgindex.json` from `directory` (or an explicit file path)."""
     path = config_path or os.path.join(directory, CONFIG_NAME)
@@ -256,6 +336,10 @@ def load_config(directory: str, config_path: Optional[str] = None) -> SiteConfig
     cfg.plugins = data.get("plugins", []) or []
     cfg.guides_nav_label, cfg.guides = _load_guides(data)
     docs_cfg = data.get("docs") or data.get("guides") or {}
+    if isinstance(docs_cfg.get("tree"), dict):
+        found, cfg.docs_tree_warnings = _discover_tree(cfg.root, docs_cfg["tree"], cfg.guides)
+        placed = {id(e) for e in found}
+        cfg.guides = [e for e in cfg.guides if id(e) not in placed] + found
     cfg.docs_landing = docs_cfg.get("landing", "")
     cfg.docs_cta_label = docs_cfg.get("cta_label", "")
     cfg.docs_cta = docs_cfg.get("cta") or {}
