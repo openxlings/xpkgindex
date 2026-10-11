@@ -209,7 +209,8 @@ def _discover_tree(root: str, tree: Dict[str, Any], declared: List[GuideEntry]) 
     chapters and every subdirectory in name order -- the number is the reading
     order. A translation is the same relative path under its language's
     directory (`docs/zh/04-x.md` for `docs/04-x.md`). A file an explicit entry
-    already declares keeps that entry.
+    already declares keeps that entry -- its slug, its titles -- at its place in
+    the tree: that is how a site that moved to a tree keeps its old URLs.
 
         "docs": { "tree": { "root": "docs", "translations": { "zh": "docs/zh" },
                             "exclude": ["specs/legacy"], "untranslated": ["specs"] } }
@@ -229,8 +230,8 @@ def _discover_tree(root: str, tree: Dict[str, Any], declared: List[GuideEntry]) 
     for lang, tdir in translations.items():
         if not os.path.isdir(os.path.join(root, tdir)):
             warnings.append(f"docs.tree: the {lang} translations directory {tdir}/ does not exist")
-    taken = {e.path.replace(os.sep, "/") for e in declared}
-    taken |= {t.replace(os.sep, "/") for e in declared for t in e.translations.values()}
+    by_path = {e.path.replace(os.sep, "/"): e for e in declared}
+    taken = {t.replace(os.sep, "/") for e in declared for t in e.translations.values()}
     skipped_dirs = {t for t in translations.values()} | {f"{base}/{e}" for e in exclude}
     found: List[str] = []
     for dirpath, dirnames, filenames in os.walk(full):
@@ -249,6 +250,9 @@ def _discover_tree(root: str, tree: Dict[str, Any], declared: List[GuideEntry]) 
 
     entries: List[GuideEntry] = []
     for path in sorted(found, key=order):
+        if path in by_path:
+            entries.append(by_path[path])
+            continue
         if path in taken:
             continue
         rel = path[len(base) + 1:]
@@ -334,7 +338,8 @@ def load_config(directory: str, config_path: Optional[str] = None) -> SiteConfig
     docs_cfg = data.get("docs") or data.get("guides") or {}
     if isinstance(docs_cfg.get("tree"), dict):
         found, cfg.docs_tree_warnings = _discover_tree(cfg.root, docs_cfg["tree"], cfg.guides)
-        cfg.guides.extend(found)
+        placed = {id(e) for e in found}
+        cfg.guides = [e for e in cfg.guides if id(e) not in placed] + found
     cfg.docs_landing = docs_cfg.get("landing", "")
     cfg.docs_cta_label = docs_cfg.get("cta_label", "")
     cfg.docs_cta = docs_cfg.get("cta") or {}

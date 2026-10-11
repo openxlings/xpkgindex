@@ -71,3 +71,15 @@ def test_a_one_language_directory_is_not_missing_its_translations(repo):
     assert by_path["docs/specs/format.md"].translations == {}
     assert not any("specs/format.md" in w for w in config.docs_tree_warnings)
     build(repo, offline=True, strict=True)   # nothing left for strict to refuse
+
+
+def test_a_declared_entry_keeps_its_slug_at_its_place_in_the_tree(repo):
+    write_config(repo, languages=["en", "zh"], docs={
+        "entries": [{"slug": "quick-start", "title": {"en": "Quick start", "zh": "快速开始"},
+                     "path": "docs/01-getting-started.md",
+                     "translations": {"zh": "docs/zh/01-getting-started.md"}}],
+        "tree": {"root": "docs", "translations": {"zh": "docs/zh"}, "exclude": ["specs/legacy"],
+                 "untranslated": ["specs"]}})
+    config = load_config(repo)
+    assert [g.slug for g in config.guides] == ["docs-index", "00-what-it-is", "quick-start", "specs-format"]
+    site, _ = build(repo, offline=True, strict=True)
