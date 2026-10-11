@@ -212,12 +212,17 @@ def _discover_tree(root: str, tree: Dict[str, Any], declared: List[GuideEntry]) 
     already declares keeps that entry.
 
         "docs": { "tree": { "root": "docs", "translations": { "zh": "docs/zh" },
-                            "exclude": ["specs/legacy"] } }
+                            "exclude": ["specs/legacy"], "untranslated": ["specs"] } }
+
+    `untranslated` names directories under the root written in one language
+    only (normative specifications): their files are pages, and the missing
+    translation is not a warning.
     """
     warnings: List[str] = []
     base = (tree.get("root") or "docs").strip("/")
     translations = {k: v.strip("/") for k, v in (tree.get("translations") or {}).items()}
     exclude = [e.strip("/") for e in (tree.get("exclude") or [])]
+    untranslated = [u.strip("/") for u in (tree.get("untranslated") or [])]
     full = os.path.join(root, base)
     if not os.path.isdir(full):
         return [], [f"docs.tree: {base}/ does not exist"]
@@ -261,7 +266,8 @@ def _discover_tree(root: str, tree: Dict[str, Any], declared: List[GuideEntry]) 
                     title = line[2:].strip()
                     break
         trans = {}
-        for lang, tdir in translations.items():
+        one_language = any(rel == u or rel.startswith(u + "/") for u in untranslated)
+        for lang, tdir in ({} if one_language else translations).items():
             candidate = f"{tdir}/{rel}"
             if os.path.isfile(os.path.join(root, candidate)):
                 trans[lang] = candidate

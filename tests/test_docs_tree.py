@@ -60,3 +60,14 @@ def test_strict_refuses_what_does_not_render(repo):
         build(repo, offline=True, strict=True)
     site, _ = build(repo, offline=True)
     assert any("no zh translation" in w for w in site.warnings)
+
+
+def test_a_one_language_directory_is_not_missing_its_translations(repo):
+    write_config(repo, languages=["en", "zh"], docs={"tree": {
+        "root": "docs", "translations": {"zh": "docs/zh"}, "exclude": ["specs/legacy"],
+        "untranslated": ["specs"]}})
+    config = load_config(repo)
+    by_path = {g.path: g for g in config.guides}
+    assert by_path["docs/specs/format.md"].translations == {}
+    assert not any("specs/format.md" in w for w in config.docs_tree_warnings)
+    build(repo, offline=True, strict=True)   # nothing left for strict to refuse
