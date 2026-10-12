@@ -4,8 +4,10 @@ Install .[dev,browser] and run playwright install chromium webkit locally.
 The dedicated CI job installs both engines; ordinary Python-only runs skip it.
 """
 
-import pytest
 from pathlib import Path
+import re
+
+import pytest
 
 playwright = pytest.importorskip("playwright.sync_api")
 
@@ -106,6 +108,9 @@ def test_touch_controls_and_resize(browser, site):
     page.set_viewport_size({"width": 1000, "height": 844})
     playwright.expect(trigger).to_be_hidden()
     playwright.expect(page.locator('.nav a').first).to_be_visible()
+    # Media-query change events are asynchronous. Confirm the desktop reset
+    # before resizing back, rather than coalescing both changes into one frame.
+    playwright.expect(page.locator('.nav-wrap')).not_to_have_class(re.compile(r'.*\bnav-open\b.*'))
     page.set_viewport_size({"width": 390, "height": 844})
     assert_closed(page)
     context.close()
