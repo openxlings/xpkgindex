@@ -28,9 +28,13 @@
     navTrigger.addEventListener('click', function () {
       if (phone.matches) setNav(!nav.classList.contains('nav-open'));
     });
-    document.addEventListener('click', function (ev) {
+    function closeNavOutside(ev) {
       if (phone.matches && !nav.contains(ev.target)) setNav(false);
-    });
+    }
+    // Touch browsers can suppress the synthesized click when a tap changes
+    // hover/focus. Dismiss on pointerdown too; click covers keyboard activation.
+    document.addEventListener('pointerdown', closeNavOutside);
+    document.addEventListener('click', closeNavOutside);
     nav.addEventListener('keydown', function (ev) {
       if (ev.key === 'Escape' && phone.matches) {
         ev.preventDefault();
