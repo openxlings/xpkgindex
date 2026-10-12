@@ -5,8 +5,48 @@
 (function () {
   'use strict';
 
-  // ---------------------------------------------------------------- theme
   var root = document.documentElement;
+
+  // ----------------------------------------------------------- navigation
+  // Phone navigation has an explicit click state. Focus and hover are not
+  // activation: touch browsers can synthesize both before delivering a click.
+  // Without JS the panel stays in the header flow with all its links available.
+  var nav = document.querySelector('.nav-wrap');
+  var navTrigger = document.querySelector('.nav-trigger');
+  var navPanel = document.getElementById('nav-panel');
+  if (nav && navTrigger && navPanel) {
+    var phone = matchMedia('(max-width: 700px)');
+    function setNav(open) {
+      nav.classList.toggle('nav-open', open);
+      navTrigger.setAttribute('aria-expanded', String(!phone.matches || open));
+      // Hide the whole subtree, including dropdowns with their own visibility
+      // rules, so closed links cannot receive clicks or keyboard focus.
+      navPanel.hidden = phone.matches && !open;
+    }
+    setNav(false);
+    nav.classList.add('nav-ready');
+    navTrigger.addEventListener('click', function () {
+      if (phone.matches) setNav(!nav.classList.contains('nav-open'));
+    });
+    document.addEventListener('click', function (ev) {
+      if (phone.matches && !nav.contains(ev.target)) setNav(false);
+    });
+    nav.addEventListener('keydown', function (ev) {
+      if (ev.key === 'Escape' && phone.matches) {
+        ev.preventDefault();
+        setNav(false);
+        navTrigger.focus();
+      }
+    });
+    nav.addEventListener('focusout', function (ev) {
+      if (phone.matches && !nav.contains(ev.relatedTarget)) setNav(false);
+    });
+    function resetNav() { setNav(false); }
+    if (phone.addEventListener) phone.addEventListener('change', resetNav);
+    else phone.addListener(resetNav);
+  }
+
+  // ---------------------------------------------------------------- theme
   var toggle = document.querySelector('.theme-toggle');
 
   // Duration comes from CSS (--theme-fade, set per site), so a consumer

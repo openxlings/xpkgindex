@@ -2,9 +2,8 @@ name: ci
 
 # The framework has no packages of its own, so the tests are the whole safety
 # net: they build throwaway index repositories — real descriptors, real git
-# history — and assert on the generated site. Every consumer index installs
-# this straight from the default branch, so a red main breaks their deploys,
-# not just ours.
+# history — and assert on the generated site. Browser tests also exercise the
+# navigation that consumer indexes share.
 
 on:
   push:
@@ -13,6 +12,18 @@ on:
   workflow_dispatch:
 
 jobs:
+  browser:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: pip install -e ".[dev,browser]"
+      - run: playwright install --with-deps chromium webkit
+      - name: Phone and desktop navigation
+        run: pytest -q tests/test_navigation_browser.py
+
   test:
     runs-on: ubuntu-latest
     strategy:
