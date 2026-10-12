@@ -818,12 +818,12 @@ tr:last-child td { border-bottom: 0; }
      the button opens — a phone header should cost one row, not three, and it
      is sticky, so whatever it costs it costs for the whole visit.
 
-     The panel opens on focus-within: a tap focuses the button, and tapping
-     away closes it. No JavaScript, and the same behaviour as the language
-     and documents menus. */
+     JS enables the button and an explicit open state. Without JS the panel
+     stays visible in the header flow, so navigation remains available. */
   .nav-wrap { display: block; position: relative; order: 2; }
-  button.nav-trigger { display: inline-flex; align-items: center; }
-  .nav-wrap:focus-within .nav-trigger { color: var(--tone-accent); background: var(--bg-sunken); }
+  .nav-ready button.nav-trigger { display: inline-flex; align-items: center; }
+  .nav-open .nav-trigger { color: var(--tone-accent); background: var(--bg-sunken); }
+  .nav-wrap:not(.nav-ready) { flex: 1 0 100%; }
 
   /* A wrapping row, not a column: the search and the nav each claim a full
      line, and the three small controls settle onto one line together at the
@@ -831,15 +831,19 @@ tr:last-child td { border-bottom: 0; }
      ordered individually. */
   .nav-panel {
     display: flex; flex-wrap: wrap; align-items: center; gap: 9px 6px;
-    position: absolute; top: calc(100% + 9px); right: 0; z-index: 30;
-    width: min(330px, calc(100vw - 24px));
     padding: 9px; border: 1px solid var(--line); border-radius: var(--radius);
     background: var(--bg-raised); box-shadow: 0 10px 30px rgba(16, 24, 40, .16);
-    opacity: 0; visibility: hidden; transform: translateY(-5px);
-    transition: opacity .13s ease, transform .13s ease, visibility .13s;
   }
-  .nav-wrap:focus-within .nav-panel, .nav-wrap:hover .nav-panel {
+  .nav-ready .nav-panel {
+    position: absolute; top: calc(100% + 9px); right: 0; z-index: 30;
+    width: min(330px, calc(100vw - 24px));
+    opacity: 0; visibility: hidden; transform: translateY(-5px);
+    pointer-events: none;
+    transition: opacity .13s ease, transform .13s ease;
+  }
+  .nav-ready.nav-open .nav-panel {
     opacity: 1; visibility: visible; transform: none;
+    pointer-events: auto;
   }
 
   .topbar-right { display: contents; }
